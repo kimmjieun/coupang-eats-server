@@ -3,7 +3,9 @@
 require './pdos/DatabasePdo.php';
 require './pdos/IndexPdo.php';
 require './pdos/JWTPdo.php';
+require './pdos/StorePdo.php';
 require './vendor/autoload.php';
+
 
 use \Monolog\Logger as Logger;
 use Monolog\Handler\StreamHandler;
@@ -25,6 +27,10 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/users', ['IndexController', 'getUsers']);
     $r->addRoute('GET', '/users/{userIdx}', ['IndexController', 'getUserDetail']);
     $r->addRoute('POST', '/user', ['IndexController', 'createUser']); // 비밀번호 해싱 예시 추가
+
+    /* ********************************* Store ********************************* */
+    $r->addRoute('GET', '/home', ['StoreController', 'getStore']);
+
 
 
 
@@ -83,6 +89,11 @@ switch ($routeInfo[0]) {
                 $handler = $routeInfo[1][1];
                 $vars = $routeInfo[2];
                 require './controllers/JWTController.php';
+                break;
+            case 'StoreController':
+                $handler = $routeInfo[1][1];
+                $vars = $routeInfo[2];
+                require './controllers/StoreController.php';
                 break;
             /*case 'EventController':
                 $handler = $routeInfo[1][1]; $vars = $routeInfo[2];
