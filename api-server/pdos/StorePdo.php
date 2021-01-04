@@ -153,6 +153,7 @@ function getStore()
 
     return $res;
 }
+
 function getStoreLastIdx(){
     $pdo = pdoSqlConnect();
     $query = "select storeIdx from Store where isDeleted ='N' order by createdAt desc limit 1;";
@@ -234,3 +235,130 @@ function getStoreImg($storeIdx)
     return $res;
 }
 
+//function getStoreInfo($storeIdx)
+//{
+//    $pdo = pdoSqlConnect();
+//    $query = "
+//        select s.storeName, s.storeStar,s.deliveryTime,
+//               concat('배달비 ',cast(FORMAT(s.deliveryFee, 0) as char), '원') as deliveryFee,
+//               concat('최소주문 ',cast(FORMAT(s.minOrderCost, 0) as char), '원') as minOrderCost,
+//               (select count(*) from Review as r  where s.storeIdx=r.storeIdx and isDeleted='N') as reviewCount
+//        from Store as s
+//        where s.storeIdx=? and s.isDeleted='N';";
+//    $st = $pdo->prepare($query);
+//    $st->execute([$storeIdx]);
+//    $st->setFetchMode(PDO::FETCH_ASSOC);
+//    $res = $st->fetchAll();
+//    // fetcho one으로 해서 for문돌리기 행전체수만큼
+//
+//    $st = null;
+//    $pdo = null;
+//
+//    return $res;
+//}
+//
+//function getPhotoReview($storeIdx)
+//{
+//    $pdo = pdoSqlConnect();
+//    $query = "
+//        select r.reviewIdx, r.content, r.reviewStar, rp.reviewPhoto
+//        from Review as r
+//        join ReviewPhoto as rp on r.reviewIdx=rp.reviewIdx
+//        where r.storeIdx=? and rp.sequence=1 and r.isDeleted='N' and rp.isDeleted='N'
+//        ORDER BY r.createdAt DESC LIMIT 3;";
+//    $st = $pdo->prepare($query);
+//    $st->execute([$storeIdx]);
+//    $st->setFetchMode(PDO::FETCH_ASSOC);
+//    $res = $st->fetchAll();
+//    // fetcho one으로 해서 for문돌리기 행전체수만큼
+//
+//    $st = null;
+//    $pdo = null;
+//
+//    return $res;
+//}
+//
+//function getMenuCat1($storeIdx)
+//{
+//    $pdo = pdoSqlConnect();
+//    $query = "
+//        select menuIdx, menuname, menuDetail, menuCatIdx,
+//               concat(cast(FORMAT(menuPrice, 0) as char), '원') as menuPrice
+//        from Menu
+//        where storeIdx=? and menuCatIdx =1 and isDeleted='N' ;";
+//    $st = $pdo->prepare($query);
+//    $st->execute([$storeIdx]);
+//    $st->setFetchMode(PDO::FETCH_ASSOC);
+//    $res = $st->fetchAll();
+//    // fetcho one으로 해서 for문돌리기 행전체수만큼
+//
+//    $st = null;
+//    $pdo = null;
+//
+//    return $res;
+//}
+//
+//function getMenuCat2($storeIdx)
+//{
+//    $pdo = pdoSqlConnect();
+//    $query = "
+//        select menuIdx, menuname, menuDetail, menuCatIdx,
+//               concat(cast(FORMAT(menuPrice, 0) as char), '원') as menuPrice
+//        from Menu
+//        where storeIdx=? and menuCatIdx =2 and isDeleted='N' ;";
+//    $st = $pdo->prepare($query);
+//    $st->execute([$storeIdx]);
+//    $st->setFetchMode(PDO::FETCH_ASSOC);
+//    $res = $st->fetchAll();
+//    // fetcho one으로 해서 for문돌리기 행전체수만큼
+//
+//    $st = null;
+//    $pdo = null;
+//
+//    return $res;
+//
+//
+//}
+
+
+//
+//function getCatCount($storeIdx)
+//{
+//    $pdo = pdoSqlConnect();
+//    $query = "
+//        select count(*) as catCount
+//        from MenuCategory
+//        where storeIdx=?;";
+//    $st = $pdo->prepare($query);
+//    $st->execute([$storeIdx]);
+//    $st->setFetchMode(PDO::FETCH_ASSOC);
+//    $res = $st->fetchAll();
+//    // fetcho one으로 해서 for문돌리기 행전체수만큼
+//
+//    $st = null;
+//    $pdo = null;
+//
+//    return $res;
+//
+//
+//}
+//
+//function getMenuCategory($storeIdx,$catIdx)
+//{
+//    $pdo = pdoSqlConnect();
+//    $query = "
+//        select menuIdx, menuname, menuDetail, menuCatIdx,
+//               concat(cast(FORMAT(menuPrice, 0) as char), '원') as menuPrice
+//        from Menu
+//        where storeIdx=? and menuCatIdx =? and isDeleted='N' ;";
+//    $st = $pdo->prepare($query);
+//    $st->execute([$storeIdx,$catIdx]);
+//    $st->setFetchMode(PDO::FETCH_ASSOC);
+//    $res = $st->fetchAll();
+//    // fetcho one으로 해서 for문돌리기 행전체수만큼
+//
+//    $st = null;
+//    $pdo = null;
+//
+//    return $res;
+//}

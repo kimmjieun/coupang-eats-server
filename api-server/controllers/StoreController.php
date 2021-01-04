@@ -51,29 +51,7 @@ try {
 
             }
 
-//            $arrayList = array();
-//            $townLifeIdx = getTownLifeIndex();
-//            while($townLifeIdx>0){
-//                $temp=(Object)array();
-//                if(isValidTownLife($townLifeIdx)){
-//                    if (!empty(getContentOne($townLifeIdx,$userIdxInToken))){ // 삭제해도되나
-//                        $temp=getContentOne($townLifeIdx,$userIdxInToken);
-//                        if(hasImage($townLifeIdx)) {
-//                            $i=0;
-//                            $img_arr=array();
-//                            $queryResult=getContentImg($townLifeIdx);
-//                            while($i<count($queryResult)){
-//                                array_push($img_arr,$queryResult[$i++]['townLifePhotoUrl']);
-//                            }
-//                            $temp['img_arr']=$img_arr;
-//                        }
-//                        array_push($arrayList,$temp);
-//                    }
-//
-//                }
-//                $townLifeIdx = $townLifeIdx-1;
-//
-//            }
+
 
             $res->result->promotion = getPromotion();
             $res->result->category = getCategory();
@@ -81,12 +59,41 @@ try {
             $res->result->openStore = getOpenStore();
             $res->result->mainStore = $arrayList; //getStore();
             $res->isSuccess = TRUE;
-            $res->code = 100;
-            $res->message = "홈 화면 조회 성공";
+            $res->code = 1000;
+            $res->message = "매장 조회 성공";
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
 
+//        case "getStoreDetail":
+//            http_response_code(200);
+//
+//            $i=0;
+//            $img_arr=array();
+//            $queryResult=getStoreImg($vars['storeIdx']);
+//            while($i<count($queryResult)){
+//                array_push($img_arr,$queryResult[$i++]['storePhoto']);
+//            }
+//            $res->result->storePhoto = $img_arr;
+//            $res->result->storeInfo = getStoreInfo($vars['storeIdx']); // 스토어정보 하나씩 가져와야해
+//            $res->result->photoReview = getPhotoReview($vars['storeIdx']); // 포토리뷰
+//            // 카테고리 반복문하고싶다
+//
+//            //카테고리개수세기
+//            // 카테고리 1일때
+////            $catCount= getCatCount($vars['storeIdx']);
+////            $catIdx=1;
+////            while($catCount>=$catIdx){
+////                $res->result->categoryname=1
+////                getMenuCategory($vars['storeIdx'],$catIdx);
+////            }
+//            $res->result->menuCategory1 = getMenuCat1($vars['storeIdx'],);
+//            $res->result->menuCategory2 = getMenuCat2($vars['storeIdx']);
+//            $res->isSuccess = TRUE;
+//            $res->code = 1000;
+//            $res->message = "매장 세부 조회 성공";
+//            echo json_encode($res, JSON_NUMERIC_CHECK);
+//            break;
 
 
     }

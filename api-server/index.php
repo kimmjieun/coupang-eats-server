@@ -29,9 +29,9 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('POST', '/user', ['IndexController', 'createUser']); // 비밀번호 해싱 예시 추가
 
     /* ********************************* Store ********************************* */
-    $r->addRoute('GET', '/home', ['StoreController', 'getStore']);
+    $r->addRoute('GET', '/stores', ['StoreController', 'getStore']);
 
-
+    $r->addRoute('GET', '/stores/{storeIdx}', ['StoreController', 'getStoreDetail']);
 
 
 //    $r->addRoute('GET', '/users', 'get_all_users_handler');
