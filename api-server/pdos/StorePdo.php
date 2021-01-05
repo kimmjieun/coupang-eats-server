@@ -2,7 +2,7 @@
 function getTest()
 {
     $pdo = pdoSqlConnect();
-    $query = "select * from table_name;";
+    $query = "select * from table_name where column_1=2;";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
