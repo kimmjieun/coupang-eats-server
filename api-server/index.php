@@ -27,12 +27,22 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/users', ['IndexController', 'getUsers']);
     $r->addRoute('GET', '/users/{userIdx}', ['IndexController', 'getUserDetail']);
     $r->addRoute('POST', '/user', ['IndexController', 'createUser']); // 비밀번호 해싱 예시 추가
-
-    /* ********************************* Store ********************************* */
-    $r->addRoute('GET', '/stores', ['StoreController', 'getStore']);
     $r->addRoute('GET', '/test', ['StoreController', 'test']);
-
+    $r->addRoute('GET', '/test2', ['StoreController', 'test2']);
+    /* ********************************* Store ********************************* */
+  //  $r->addRoute('GET', '/stores', ['StoreController', 'getStore']);
+    $r->addRoute('GET', '/home', ['StoreController', 'getStore']);
+    $r->addRoute('GET', '/stores', ['StoreController', 'getChoiceStore']);
     $r->addRoute('GET', '/stores/{storeIdx}', ['StoreController', 'getStoreDetail']);
+
+    // 인기프랜차이즈 조회
+    $r->addRoute('GET', '/franchise-stores/{storeIdx}', ['StoreController', 'getFranchiseStoreDetail']);
+    // 새로들어왔어요 조회
+    $r->addRoute('GET', '/new-stores/{storeIdx}', ['StoreController', 'getNewStoreDetail']);
+
+    /* ********************************* jwt ********************************* */
+    $r->addRoute('POST', '/kakao-login', ['JWTController', 'createKakaoJwt']);
+    $r->addRoute('POST', '/naver-login', ['JWTController', 'createNaverJwt']);
 
 
 //    $r->addRoute('GET', '/users', 'get_all_users_handler');
