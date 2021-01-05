@@ -1,5 +1,20 @@
 <?php
+function getTest()
+{
+    $pdo = pdoSqlConnect();
+    $query = "select * from table_name;";
 
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
 
 function getPromotion()
 {
@@ -235,22 +250,6 @@ function getStoreImg($storeIdx)
     return $res;
 }
 
-
-function getStoreThumbnail($storeIdx)
-{
-    $pdo = pdoSqlConnect();
-    $query = "SELECT storeThumbnail FROM StoreThumbnail WHERE storeIdx = ? and isDeleted='N';";
-    $st = $pdo->prepare($query);
-    $st->execute([$storeIdx]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-    // fetcho one으로 해서 for문돌리기 행전체수만큼
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
 //function getStoreInfo($storeIdx)
 //{
 //    $pdo = pdoSqlConnect();
@@ -378,4 +377,3 @@ function getStoreThumbnail($storeIdx)
 //
 //    return $res;
 //}
-

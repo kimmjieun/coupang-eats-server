@@ -1,11 +1,10 @@
-
 <?php
 require 'function.php';
 
 const JWT_SECRET_KEY = "TEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEY";
 
 $res = (object)array();
-header('Content-Type: json;charset=utf-8');
+header('Content-Type: json');
 $req = json_decode(file_get_contents("php://input"));
 try {
     addAccessLogs($accessLogs, $req);
@@ -25,6 +24,11 @@ try {
             break;
 
         /* **************** store ********************8 */
+        case "test":
+            $res->message = getTest();
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
         case "getStore":
             http_response_code(200);
 
@@ -52,6 +56,8 @@ try {
 
             }
 
+
+
             $res->result->promotion = getPromotion();
             $res->result->category = getCategory();
             $res->result->franchise = getFranchise();
@@ -63,47 +69,6 @@ try {
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
-        case "getHome":
-            http_response_code(200);
-
-            $arrayList = array();
-            $storeIdx = getStoreLastIdx();
-            while($storeIdx>0){
-                $temp=(Object)array();
-                if(isValidStore($storeIdx)){ // 솔직히 필요없어보여
-                    if (!empty(getStoreOne($storeIdx))){ // 삭제해도되나
-                        $temp=getStoreOne($storeIdx);
-
-
-                        $img_arr=array();
-                        $queryResult=getStoreImg($storeIdx);
-                        array_push($img_arr,$queryResult[0]['storePhoto']);
-
-                        $i=0;
-                        $queryThumbnail=getStoreThumbnail($storeIdx);
-                        while($i<count($queryThumbnail)){
-                            array_push($img_arr,$queryThumbnail[$i++]['storeThumbnail']);
-                        }
-                        $temp['img_arr']=$img_arr;
-
-                        array_push($arrayList,$temp);
-                    }
-
-                }
-                $storeIdx = $storeIdx-1;
-
-            }
-
-            $res->result->promotion = getPromotion();
-            $res->result->category = getCategory();
-            $res->result->franchise = getFranchise();
-            $res->result->openStore = getOpenStore();
-            $res->result->mainStore = $arrayList; //getStore();
-            $res->isSuccess = TRUE;
-            $res->code = 1000;
-            $res->message = "홈화면 조회 성공";
-            echo json_encode($res, JSON_NUMERIC_CHECK);
-            break;
 
 //        case "getStoreDetail":
 //            http_response_code(200);
@@ -136,11 +101,7 @@ try {
 //            break;
 
 
-
-
     }
 } catch (\Exception $e) {
     return getSQLErrorException($errorLogs, $e, $req);
 }
-
-
