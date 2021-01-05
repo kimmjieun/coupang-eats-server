@@ -4,6 +4,7 @@ require './pdos/DatabasePdo.php';
 require './pdos/IndexPdo.php';
 require './pdos/JWTPdo.php';
 require './pdos/StorePdo.php';
+require './pdos/AddressPdo.php';
 require './vendor/autoload.php';
 
 
@@ -29,9 +30,23 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('POST', '/user', ['IndexController', 'createUser']); // 비밀번호 해싱 예시 추가
 
     /* ********************************* Store ********************************* */
+    // 홈화면 조회 uri명 변경
     $r->addRoute('GET', '/stores', ['StoreController', 'getStore']);
 
+    $r->addRoute('GET', '/home', ['StoreController', 'getHome']);
+
     $r->addRoute('GET', '/stores/{storeIdx}', ['StoreController', 'getStoreDetail']);
+
+
+    /* ********************************* address ********************************* */
+    // 현재위치 주소 설정 api
+    $r->addRoute('POST', '/current-address', ['AddressController', 'setCurrentAddress']);
+    // 현재 위치 조회
+    //$r->addRoute('GET', '/current-address', ['AddressController', 'getCurrentAddress']);
+    // 키워드 주소 검색
+    $r->addRoute('GET', '/selected-address', ['AddressController', 'getKeywordAddress']);
+    // 키워드 주소 설정 api -> 조회후 선택
+    $r->addRoute('POST', '/selected-address', ['AddressController', 'setSelectedAddress']);
 
 
 //    $r->addRoute('GET', '/users', 'get_all_users_handler');
@@ -94,6 +109,11 @@ switch ($routeInfo[0]) {
                 $handler = $routeInfo[1][1];
                 $vars = $routeInfo[2];
                 require './controllers/StoreController.php';
+                break;
+            case 'AddressController':
+                $handler = $routeInfo[1][1];
+                $vars = $routeInfo[2];
+                require './controllers/AddressController.php';
                 break;
             /*case 'EventController':
                 $handler = $routeInfo[1][1]; $vars = $routeInfo[2];
