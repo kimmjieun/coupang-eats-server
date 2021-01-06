@@ -67,85 +67,77 @@ try {
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
+
+
         case "createKakaoJwt":
-            //echo '시작';
-            //아이디 중복인사람 걸러내기
-            //액세스토큰속아이디
-            $USER_API_URL= "https://kapi.kakao.com/v2/user/me";
-            $opts = array( CURLOPT_URL => $USER_API_URL,
-                CURLOPT_SSL_VERIFYPEER => false, CURLOPT_SSLVERSION => 1,
+
+            $accessToken=$req->accessToken;
+
+            $app_url= "https://kapi.kakao.com/v2/user/me";
+            $opts = array( CURLOPT_URL => $app_url,
+                CURLOPT_SSL_VERIFYPEER => false,
                 CURLOPT_POST => true,
                 CURLOPT_POSTFIELDS => false,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER => array( "Authorization: Bearer " . $req->accessToken ) );
-
-            $curlSession = curl_init();
-            curl_setopt_array($curlSession, $opts);
-            $accessUserJson = curl_exec($curlSession);
-            curl_close($curlSession);
-
-            $me_responseArr = json_decode($accessUserJson, true);
+                CURLOPT_HTTPHEADER => array( "Authorization: Bearer ".$accessToken ) );
+            $ch = curl_init();
+            curl_setopt_array($ch, $opts);
+            $result = curl_exec($ch);
+            curl_close($ch);
+            $me_responseArr = json_decode($result, true);
             if ($me_responseArr['id']) {
                 $mb_uid = 'kakao_'.$me_responseArr['id'];
+                //$nickname = 'kakao_'.$me_responseArr['nickname'];
                 $mb_nickname = $me_responseArr['properties']['nickname']; // 닉네임
-                $mb_profile_image = $me_responseArr['properties']['profile_image']; // 프로필 이미지
-
+                $mb_email = $me_responseArr['kakao_account']['email']; // 이메일
+//                $registered_at = $me_responseArr['registered_at'];
+//                $mb_profile_image = $me_responseArr['properties']['profile_image']; // 프로필 이미지
+//                $mb_thumbnail_image = $me_responseArr['properties']['thumbnail_image']; // 프로필 이미지
+//                $mb_gender = $me_responseArr['kakao_account']['gender']; // 성별 female/male
+//                $mb_age = $me_responseArr['kakao_account']['age_range']; // 연령대
+//                $mb_birthday = $me_responseArr['kakao_account']['birthday']; // 생일
+//                echo "<br><br> mb_uid : " . $mb_uid;
+//                echo "<br><br> nickname : " . $nickname;
+//                echo "<br> mb_nickname : " . $mb_nickname;
+//                echo "<br> mb_profile_image : " . $mb_profile_image;
+//                echo "<br> mb_thumbnail_image : " . $mb_thumbnail_image;
+//                echo "<br> mb_email : " . $mb_email;
+//                echo "<br> mb_gender:" . $mb_gender;
+//                echo "<br> mb_age:" . $mb_age;
+//                echo "<br> mb_birthday:" . $mb_birthday;
+                if (isValidUser($mb_uid)) { // JWTPdo.php 에 구현
+                    $userIdx=login($mb_uid); // 함수를 바꿔 유저idx로 가져오는
+                    $jwt = getJWT($userIdx, JWT_SECRET_KEY);
+                    $res->result->jwt = $jwt;
+                    $res->isSuccess = TRUE;
+                    $res->code = 1000;
+                    $res->message = "카카오 로그인 성공";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    break;
+                }
+                else{
+                    $userIdx=newKakaoLogin($mb_nickname,$mb_uid,$mb_email);
+                    $jwt = getJWT($userIdx, JWT_SECRET_KEY); // function.php 에 구현
+                    $res->result->jwt = $jwt;
+                    $res->isSuccess = TRUE;
+                    $res->code = 1001;
+                    $res->message = "카카오 회원가입 성공";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    break;
+                }
             }
             else{
-                echo "카카오 아이디를 받아올 수 없습니다.";
-                break;
-            }
-
-
-            if (isValidUser($mb_uid)) { // JWTPdo.php 에 구현
-                $userIdx=login($mb_uid); // 함수를 바꿔 유저idx로 가져오는
-                $jwt = getJWT($userIdx, JWT_SECRET_KEY);
-                $res->result->jwt = $jwt;
                 $res->isSuccess = TRUE;
-                $res->code = 100;
-                $res->message = "카카오 로그인 성공";
+                $res->code = 2000;
+                $res->message = "유효하지 않은 토큰입니다.";
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 break;
             }
-            else{
-                $userIdx=newKakaoLogin($req->accessToken);
-                $jwt = getJWT($userIdx, JWT_SECRET_KEY); // function.php 에 구현
-                $res->result->jwt = $jwt;
-                $res->isSuccess = TRUE;
-                $res->code = 101;
-                $res->message = "카카오 로그인 성공";
-                echo json_encode($res, JSON_NUMERIC_CHECK);
-                break;
-            }
 
-        case "createKakaoJwt":
-            //echo '시작';
-            //아이디 중복인사람 걸러내기
-            //액세스토큰속아이디
-            $USER_API_URL= "https://kapi.kakao.com/v2/user/me";
-            $opts = array( CURLOPT_URL => $USER_API_URL,
-                CURLOPT_SSL_VERIFYPEER => false, CURLOPT_SSLVERSION => 1,
-                CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => false,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER => array( "Authorization: Bearer " . $req->accessToken ) );
 
-            $curlSession = curl_init();
-            curl_setopt_array($curlSession, $opts);
-            $accessUserJson = curl_exec($curlSession);
-            curl_close($curlSession);
+        case "createNaverJwt":
 
-            $me_responseArr = json_decode($accessUserJson, true);
-            if ($me_responseArr['id']) {
-                $mb_uid = 'kakao_'.$me_responseArr['id'];
-                $mb_nickname = $me_responseArr['properties']['nickname']; // 닉네임
-                $mb_profile_image = $me_responseArr['properties']['profile_image']; // 프로필 이미지
-
-            }
-            else{
-                echo "카카오 아이디를 받아올 수 없습니다.";
-                break;
-            }
+            $accessToken=$req->accessToken;
 
 
             if (isValidUser($mb_uid)) { // JWTPdo.php 에 구현
@@ -159,15 +151,17 @@ try {
                 break;
             }
             else{
-                $userIdx=newNaverLogin($req->accessToken);
+                $userIdx=newNaverLogin($accessToken);
                 $jwt = getJWT($userIdx, JWT_SECRET_KEY); // function.php 에 구현
                 $res->result->jwt = $jwt;
                 $res->isSuccess = TRUE;
                 $res->code = 101;
-                $res->message = "네이버 로그인 성공";
+                $res->message = "네이버 검증 및 회원가입 성공";
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 break;
             }
+
+
 
     }
 } catch (\Exception $e) {

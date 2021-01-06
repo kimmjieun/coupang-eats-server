@@ -4,6 +4,7 @@ require './pdos/DatabasePdo.php';
 require './pdos/IndexPdo.php';
 require './pdos/JWTPdo.php';
 require './pdos/StorePdo.php';
+require './pdos/AddressPdo.php';
 require './vendor/autoload.php';
 
 
@@ -31,19 +32,34 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/test2', ['StoreController', 'test2']);
     /* ********************************* Store ********************************* */
   //  $r->addRoute('GET', '/stores', ['StoreController', 'getStore']);
-    $r->addRoute('GET', '/home', ['StoreController', 'getStore']);
+    $r->addRoute('GET', '/home', ['StoreController', 'getHome']);
+    // 골라먹는맛집조회
     $r->addRoute('GET', '/stores', ['StoreController', 'getChoiceStore']);
+    // 골라먹는맛집 세부 조회
     $r->addRoute('GET', '/stores/{storeIdx}', ['StoreController', 'getStoreDetail']);
-
     // 인기프랜차이즈 조회
-    $r->addRoute('GET', '/franchise-stores/{storeIdx}', ['StoreController', 'getFranchiseStoreDetail']);
+    $r->addRoute('GET', '/franchise-stores', ['StoreController', 'getFranchiseStore']);
     // 새로들어왔어요 조회
-    $r->addRoute('GET', '/new-stores/{storeIdx}', ['StoreController', 'getNewStoreDetail']);
+    $r->addRoute('GET', '/new-stores/', ['StoreController', 'getNewStore']);
+    // 인기프랜차이즈 세부 조회
+//    $r->addRoute('GET', '/franchise-stores/{storeIdx}', ['StoreController', 'getFranchiseStoreDetail']);
+    // 새로들어왔어요 세부 조회
+//    $r->addRoute('GET', '/new-stores/{storeIdx}', ['StoreController', 'getNewStoreDetail']);
+
 
     /* ********************************* jwt ********************************* */
     $r->addRoute('POST', '/kakao-login', ['JWTController', 'createKakaoJwt']);
     $r->addRoute('POST', '/naver-login', ['JWTController', 'createNaverJwt']);
 
+    /* ********************************* address ********************************* */
+    // 주소 설정 api
+    $r->addRoute('PATCH', '/address', ['AddressController', 'setAddress']);
+    // 현재위치 주소 설정 api
+//    $r->addRoute('POST', '/current-address', ['AddressController', 'setCurrentAddress']);
+    // 키워드 주소 검색
+    //$r->addRoute('GET', '/selected-address', ['AddressController', 'getKeywordAddress']);
+    // 키워드 주소 설정 api -> 조회후 선택
+    //$r->addRoute('POST', '/selected-address', ['AddressController', 'setSelectedAddress']);
 
 //    $r->addRoute('GET', '/users', 'get_all_users_handler');
 //    // {id} must be a number (\d+)
@@ -106,30 +122,12 @@ switch ($routeInfo[0]) {
                 $vars = $routeInfo[2];
                 require './controllers/StoreController.php';
                 break;
-            /*case 'EventController':
-                $handler = $routeInfo[1][1]; $vars = $routeInfo[2];
-                require './controllers/EventController.php';
+            case 'AddressController':
+                $handler = $routeInfo[1][1];
+                $vars = $routeInfo[2];
+                require './controllers/AddressController.php';
                 break;
-            case 'ProductController':
-                $handler = $routeInfo[1][1]; $vars = $routeInfo[2];
-                require './controllers/ProductController.php';
-                break;
-            case 'SearchController':
-                $handler = $routeInfo[1][1]; $vars = $routeInfo[2];
-                require './controllers/SearchController.php';
-                break;
-            case 'ReviewController':
-                $handler = $routeInfo[1][1]; $vars = $routeInfo[2];
-                require './controllers/ReviewController.php';
-                break;
-            case 'ElementController':
-                $handler = $routeInfo[1][1]; $vars = $routeInfo[2];
-                require './controllers/ElementController.php';
-                break;
-            case 'AskFAQController':
-                $handler = $routeInfo[1][1]; $vars = $routeInfo[2];
-                require './controllers/AskFAQController.php';
-                break;*/
+
         }
 
         break;

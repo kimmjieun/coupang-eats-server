@@ -181,6 +181,19 @@ function getStoreLastIdx(){
     $pdo = null;
     return $row;
 }
+//
+//function getStoreFranchiseLastIdx(){
+//    $pdo = pdoSqlConnect();
+//    $query = "select storeIdx from Store where isDeleted ='N' and isFranchise= 'Y' order by createdAt desc limit 1;";
+//
+//    $st = $pdo->prepare($query);
+//    $st->execute();
+//
+//    $row = $st -> fetchColumn(); // 컬럼하나의 값만!
+//    //$st = null;
+//    $pdo = null;
+//    return $row;
+//}
 
 function isValidStore($storeIdx)
 {
