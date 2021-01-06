@@ -32,21 +32,22 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/test2', ['StoreController', 'test2']);
     /* ********************************* Store ********************************* */
   //  $r->addRoute('GET', '/stores', ['StoreController', 'getStore']);
+    // 홈화면조회
     $r->addRoute('GET', '/home', ['StoreController', 'getHome']);
     // 골라먹는맛집조회
-    $r->addRoute('GET', '/stores', ['StoreController', 'getChoiceStore']);
+    //$r->addRoute('GET', '/stores', ['StoreController', 'getChoiceStore']);
     // 골라먹는맛집 세부 조회
     $r->addRoute('GET', '/stores/{storeIdx}', ['StoreController', 'getStoreDetail']);
     // 인기프랜차이즈 조회
-    $r->addRoute('GET', '/franchise-stores', ['StoreController', 'getFranchiseStore']);
+    //$r->addRoute('GET', '/franchise-stores', ['StoreController', 'getFranchiseStore']);
     // 새로들어왔어요 조회
-    $r->addRoute('GET', '/new-stores/', ['StoreController', 'getNewStore']);
-    // 인기프랜차이즈 세부 조회
-//    $r->addRoute('GET', '/franchise-stores/{storeIdx}', ['StoreController', 'getFranchiseStoreDetail']);
-    // 새로들어왔어요 세부 조회
-//    $r->addRoute('GET', '/new-stores/{storeIdx}', ['StoreController', 'getNewStoreDetail']);
-
-
+    //$r->addRoute('GET', '/new-stores', ['StoreController', 'getNewStore']);
+    // 메뉴 세부조회
+    $r->addRoute('GET', '/menus/{menuIdx}', ['StoreController', 'getMenuOption']);
+    // 카트담기
+    $r->addRoute('POST', '/cart', ['StoreController', 'createCart']);
+    // 즐겨찾기 추가
+    $r->addRoute('POST', '/stores/hart', ['StoreController', 'hartStore']);
     /* ********************************* jwt ********************************* */
     $r->addRoute('POST', '/kakao-login', ['JWTController', 'createKakaoJwt']);
     $r->addRoute('POST', '/naver-login', ['JWTController', 'createNaverJwt']);

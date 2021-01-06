@@ -56,7 +56,7 @@ function login($mb_uid)
     $query = "select userIdx from UserInfo where userId=? and isDeleted='N';";
     $st = $pdo->prepare($query);
     $st->execute([$mb_uid]);
-    $userIdx=$pdo->lastInsertId();
+    $userIdx=$st -> fetchColumn();
     $st = null;
     $pdo = null;
     return $userIdx;
@@ -64,7 +64,7 @@ function login($mb_uid)
 }
 
 
-function newKakaoLogin($accessToken)
+function signUp($mb_nickname,$mb_uid,$mb_email)
 {
 
 //    $USER_API_URL= "https://kapi.kakao.com/v2/user/me";

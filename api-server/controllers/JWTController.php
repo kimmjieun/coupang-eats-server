@@ -87,15 +87,15 @@ try {
             $me_responseArr = json_decode($result, true);
             if ($me_responseArr['id']) {
                 $mb_uid = 'kakao_'.$me_responseArr['id'];
-                //$nickname = 'kakao_'.$me_responseArr['nickname'];
+                $nickname = 'kakao_'.$me_responseArr['nickname'];
                 $mb_nickname = $me_responseArr['properties']['nickname']; // 닉네임
                 $mb_email = $me_responseArr['kakao_account']['email']; // 이메일
-//                $registered_at = $me_responseArr['registered_at'];
-//                $mb_profile_image = $me_responseArr['properties']['profile_image']; // 프로필 이미지
-//                $mb_thumbnail_image = $me_responseArr['properties']['thumbnail_image']; // 프로필 이미지
-//                $mb_gender = $me_responseArr['kakao_account']['gender']; // 성별 female/male
-//                $mb_age = $me_responseArr['kakao_account']['age_range']; // 연령대
-//                $mb_birthday = $me_responseArr['kakao_account']['birthday']; // 생일
+                $registered_at = $me_responseArr['registered_at'];
+                $mb_profile_image = $me_responseArr['properties']['profile_image']; // 프로필 이미지
+                $mb_thumbnail_image = $me_responseArr['properties']['thumbnail_image']; // 프로필 이미지
+                $mb_gender = $me_responseArr['kakao_account']['gender']; // 성별 female/male
+                $mb_age = $me_responseArr['kakao_account']['age_range']; // 연령대
+                $mb_birthday = $me_responseArr['kakao_account']['birthday']; // 생일
 //                echo "<br><br> mb_uid : " . $mb_uid;
 //                echo "<br><br> nickname : " . $nickname;
 //                echo "<br> mb_nickname : " . $mb_nickname;
@@ -107,6 +107,9 @@ try {
 //                echo "<br> mb_birthday:" . $mb_birthday;
                 if (isValidUser($mb_uid)) { // JWTPdo.php 에 구현
                     $userIdx=login($mb_uid); // 함수를 바꿔 유저idx로 가져오는
+                    //echo $mb_uid;
+                    //echo 'userIdx'.$userIdx;
+                    //break;
                     $jwt = getJWT($userIdx, JWT_SECRET_KEY);
                     $res->result->jwt = $jwt;
                     $res->isSuccess = TRUE;
@@ -116,7 +119,8 @@ try {
                     break;
                 }
                 else{
-                    $userIdx=newKakaoLogin($mb_nickname,$mb_uid,$mb_email);
+                    $userIdx=signUp($mb_nickname,$mb_uid,$mb_email);
+                    //echo 'userIdx'.$userIdx;
                     $jwt = getJWT($userIdx, JWT_SECRET_KEY); // function.php 에 구현
                     $res->result->jwt = $jwt;
                     $res->isSuccess = TRUE;
@@ -138,32 +142,34 @@ try {
         case "createNaverJwt":
 
             $accessToken=$req->accessToken;
+            $token = $accessToken;
+            $header = "Bearer ".$token; // Bearer 다음에 공백 추가
+            $url = "https://openapi.naver.com/v1/nid/me";
+            $is_post = false;
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, $is_post);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $headers = array();
+            $headers[] = "Authorization: ".$header;
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            $response = curl_exec ($ch);
+            $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            echo "dddddd".$response;
+            break;
+//            break;
+//            echo "status_code:".$status_code."<br>";
+//            curl_close ($ch);
+//            if($status_code == 200) {
+//                echo $response;
+//            } else {
+//                echo "Error 내용:".$response;
+//            }
+//            break;
 
 
-            if (isValidUser($mb_uid)) { // JWTPdo.php 에 구현
-                $userIdx=login($mb_uid); // 함수를 바꿔 유저idx로 가져오는
-                $jwt = getJWT($userIdx, JWT_SECRET_KEY);
-                $res->result->jwt = $jwt;
-                $res->isSuccess = TRUE;
-                $res->code = 100;
-                $res->message = "네이버 로그인 성공";
-                echo json_encode($res, JSON_NUMERIC_CHECK);
-                break;
-            }
-            else{
-                $userIdx=newNaverLogin($accessToken);
-                $jwt = getJWT($userIdx, JWT_SECRET_KEY); // function.php 에 구현
-                $res->result->jwt = $jwt;
-                $res->isSuccess = TRUE;
-                $res->code = 101;
-                $res->message = "네이버 검증 및 회원가입 성공";
-                echo json_encode($res, JSON_NUMERIC_CHECK);
-                break;
-            }
 
-
-
-    }
+}
 } catch (\Exception $e) {
     return getSQLErrorException($errorLogs, $e, $req);
 }

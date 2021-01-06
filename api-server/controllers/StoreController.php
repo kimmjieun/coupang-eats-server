@@ -179,6 +179,8 @@ try {
             while($i<count($queryResult)){
                 array_push($img_arr,$queryResult[$i++]['storePhoto']);
             }
+
+
             $res->storePhoto = $img_arr;
             $res->storeInfo = getStoreInfo($vars['storeIdx']); // 스토어정보 하나씩 가져와야해
             $res->photoReview = getPhotoReview($vars['storeIdx']); // 포토리뷰
@@ -238,109 +240,107 @@ try {
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
-//        case "getFranchiseStoreDetail":
-//            http_response_code(200);
-////            if(!isValidStore($vars['storeIdx'])){
-////                $res->isSuccess = FALSE;
-////                $res->code = 2000;
-////                $res->message = "유효하지않은 매장입니다.";
-////                echo json_encode($res, JSON_NUMERIC_CHECK);
-////                break;
-////            }
-//            if(!isValidFranchise($vars['storeIdx'])){
-//                $res->isSuccess = FALSE;
-//                $res->code = 2000;
-//                $res->message = "유효하지않은 매장입니다.";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                break;
-//            }
-//
-//
-//            $i=0;
-//            $img_arr=array();
-//            $queryResult=getStoreImg($vars['storeIdx']);
-//            while($i<count($queryResult)){
-//                array_push($img_arr,$queryResult[$i++]['storePhoto']);
-//            }
-//            $res->storePhoto = $img_arr;
-//            $res->storeInfo = getStoreInfo($vars['storeIdx']); // 스토어정보 하나씩 가져와야해
-//            $res->photoReview = getPhotoReview($vars['storeIdx']); // 포토리뷰
-//
-//            $catCount= getCatCount($vars['storeIdx']);
-//            $catIdx=1;
-//            $arrayList = array();
-//
-//            while($catCount>=$catIdx){
-//                $temp=array();
-//
-//                $temp['categoryIdx']=$catIdx;
-//                $temp['categoryName']=getCatName($vars['storeIdx'],$catIdx);
-//                $temp['categoryDetail']=getCatDetail($vars['storeIdx'],$catIdx);
-//                $temp['menuList'] =getMenuCategory($vars['storeIdx'],$catIdx);
-//                array_push($arrayList,$temp);
-//                $catIdx++;
-//            }
-//
-//
-//            $res->categoryMenu=$arrayList;
-//
-//            $res->isSuccess = TRUE;
-//            $res->code = 1000;
-//            $res->message = "인기프랜차이즈 세부 조회 성공";
-//            echo json_encode($res, JSON_NUMERIC_CHECK);
-//            break;
-//
-//        case "getNewStoreDetail":
-//            http_response_code(200);
-////            if(!isValidStore($vars['storeIdx'])){
-////                $res->isSuccess = FALSE;
-////                $res->code = 2000;
-////                $res->message = "유효하지않은 매장입니다.";
-////                echo json_encode($res, JSON_NUMERIC_CHECK);
-////                break;
-////            }
-//            if(!isValidNewStore($vars['storeIdx'])){
-//                $res->isSuccess = FALSE;
-//                $res->code = 2000;
-//                $res->message = "유효하지않은 매장입니다.";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                break;
-//            }
-//
-//
-//            $i=0;
-//            $img_arr=array();
-//            $queryResult=getStoreImg($vars['storeIdx']);
-//            while($i<count($queryResult)){
-//                array_push($img_arr,$queryResult[$i++]['storePhoto']);
-//            }
-//            $res->storePhoto = $img_arr;
-//            $res->storeInfo = getStoreInfo($vars['storeIdx']); // 스토어정보 하나씩 가져와야해
-//            $res->photoReview = getPhotoReview($vars['storeIdx']); // 포토리뷰
-//
-//            $catCount= getCatCount($vars['storeIdx']);
-//            $catIdx=1;
-//            $arrayList = array();
-//
-//            while($catCount>=$catIdx){
-//                $temp=array();
-//
-//                $temp['categoryIdx']=$catIdx;
-//                $temp['categoryName']=getCatName($vars['storeIdx'],$catIdx);
-//                $temp['categoryDetail']=getCatDetail($vars['storeIdx'],$catIdx);
-//                $temp['menuList'] =getMenuCategory($vars['storeIdx'],$catIdx);
-//                array_push($arrayList,$temp);
-//                $catIdx++;
-//            }
-//
-//
-//            $res->categoryMenu=$arrayList;
-//
-//            $res->isSuccess = TRUE;
-//            $res->code = 1000;
-//            $res->message = "새로들어왔어요 세부 조회 성공";
-//            echo json_encode($res, JSON_NUMERIC_CHECK);
-//            break;
+        case "getMenuOption":
+            http_response_code(200);
+            if(!isValidMenu($vars['menuIdx'])){
+                $res->isSuccess = FALSE;
+                $res->code = 2000;
+                $res->message = "유효하지않은 메뉴입니다.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                break;
+            }
+            //메뉴 사진 , 메뉴설명 ,가격, 카테고리별 옵션, 가격, 카테고리명 카테고리인덱스
+
+            $i=0;
+            $img_arr=array();
+            $queryResult=getMenuImg($vars['menuIdx']);
+            while($i<count($queryResult)){
+                array_push($img_arr,$queryResult[$i++]['menuPhoto']);
+            }
+            //메뉴이미지
+            $res->menuPhoto = $img_arr;
+            //메뉴정보
+            $res->menuInfo = getMenuInfo($vars['menuIdx']); // 스토어정보 하나씩 가져와야해
+
+            $catCount= getOptCatCount($vars['menuIdx']);
+            $catIdx=1;
+            $arrayList = array();
+            while($catCount>=$catIdx){
+                $temp=array();
+
+                $temp['optCategoryIdx']=$catIdx;
+                $temp['optCategoryName']=getOptCatName($vars['menuIdx'],$catIdx);
+                $temp['optmenuList'] =getOptMenuCategory($vars['menuIdx'],$catIdx);
+                array_push($arrayList,$temp);
+                $catIdx++;
+            }
+            //옵션메뉴
+            $res->optCategoryMenu=$arrayList;
+            $res->isSuccess = TRUE;
+            $res->code = 1000;
+            $res->message = "메뉴 세부 조회 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "createCart":
+            http_response_code(200);
+            // 가격, 옵션인덱스=배열  입력
+//            $res->result=$req->cart;
+
+            $res->result=$req->cart[0];
+            $res->isSuccess = TRUE;
+            $res->code = 1000;
+            $res->message = "카트 담기 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "hartStore":
+            http_response_code(200);
+            $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
+            $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
+            if (empty($jwt)){
+                $res->isSuccess = FALSE;
+                $res->code = 2000;
+                $res->message = "토큰을 입력하세요.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
+                $res->isSuccess = FALSE;
+                $res->code = 2001;
+                $res->message = "유효하지 않은 토큰입니다.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            // 가져온토큰을 어떻게 처리할지 넘기긴 하는데 밸리데이션
+            if(!isValidStore($req->storeIdx)){ // product 테이블에 인덱스 있는지
+                $res->isSuccess = False;
+                $res->code = 2002;
+                $res->message = "유효 하지 않은 인덱스";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                break;
+            }
+
+            //$userIdx=1;
+
+            if(isHart($req->storeIdx,$userIdxInToken)){
+                $res->result=deleteHart($req->storeIdx,$userIdxInToken);
+                $res->isSuccess = TRUE;
+                $res->code = 1001;
+                $res->message = "즐겨찾기 취소했습니다.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                break;
+            }
+            $res->result = hartStore($req->storeIdx,$userIdxInToken);
+            $res->isSuccess = TRUE;
+            $res->code = 1000;
+            $res->message = "즐겨찾기 추가 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+
     }
 } catch (\Exception $e) {
     return getSQLErrorException($errorLogs, $e, $req);

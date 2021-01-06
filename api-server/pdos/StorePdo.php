@@ -211,6 +211,24 @@ function isValidStore($storeIdx)
     return intval($res[0]['exist']);
 }
 
+function isValidMenu($menuIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "select EXISTS(select menuIdx from Menu where isDeleted ='N' and menuIdx = ? ) exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$menuIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]['exist']);
+}
+
+
+
 function isValidFranchise($storeIdx)
 {
     $pdo = pdoSqlConnect();
@@ -335,6 +353,21 @@ function getStoreImg($storeIdx)
 
     return $res;
 }
+function getMenuImg($menuIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "select menuPhoto from MenuPhoto where menuIdx=? and isDeleted='N';";
+    $st = $pdo->prepare($query);
+    $st->execute([$menuIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+    // fetcho one으로 해서 for문돌리기 행전체수만큼
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
 
 function getStoreInfo($storeIdx)
 {
@@ -362,6 +395,46 @@ function getStoreInfo($storeIdx)
     return $res;
 }
 
+function getMenuInfo($menuIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+        select menuName, menuDetail,
+               concat(cast(FORMAT(menuPrice, 0) as char), '원') as menuPrice
+        from Menu
+        where menuIdx=? and isDeleted='N';";
+    $st = $pdo->prepare($query);
+    $st->execute([$menuIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+    // fetcho one으로 해서 for문돌리기 행전체수만큼
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+
+function getMenuOption($storeIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+        select r.reviewIdx, r.content, r.reviewStar, rp.reviewPhoto
+        from Review as r
+        join ReviewPhoto as rp on r.reviewIdx=rp.reviewIdx
+        where r.storeIdx=? and rp.sequence=1 and r.isDeleted='N' and rp.isDeleted='N'
+        ORDER BY r.createdAt DESC LIMIT 3;";
+    $st = $pdo->prepare($query);
+    $st->execute([$storeIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+    // fetcho one으로 해서 for문돌리기 행전체수만큼
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
 function getPhotoReview($storeIdx)
 {
     $pdo = pdoSqlConnect();
@@ -407,6 +480,26 @@ function getCatCount($storeIdx)
 
 }
 
+function getOptCatCount($menuIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+        select count(*) as menuOptCatIdx
+        from MenuOptionCat
+        where menuIdx=?;";
+    $st = $pdo->prepare($query);
+    $st->execute([$menuIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchColumn();
+    // fetcho one으로 해서 for문돌리기 행전체수만큼
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+
+
+}
 function getCatName($storeIdx,$catIdx)
 {
     $pdo = pdoSqlConnect();
@@ -416,6 +509,26 @@ function getCatName($storeIdx,$catIdx)
         where storeIdx=? and menuCatIdx=?;";
     $st = $pdo->prepare($query);
     $st->execute([$storeIdx,$catIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchColumn();
+    // fetcho one으로 해서 for문돌리기 행전체수만큼
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+
+
+}
+
+function getOptCatName($menuIdx,$catIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+        select menuOptCatName from MenuOptionCat
+        where menuIdx =? and menuOptCatIdx=? and isDeleted='N';";
+    $st = $pdo->prepare($query);
+    $st->execute([$menuIdx,$catIdx]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchColumn();
     // fetcho one으로 해서 for문돌리기 행전체수만큼
@@ -466,4 +579,68 @@ function getMenuCategory($storeIdx,$catIdx)
     $pdo = null;
 
     return $res;
+}
+
+function getOptMenuCategory($menuIdx,$catIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+        select menuOptIdx, menuOptName,
+               concat(cast(FORMAT(optPrice, 0) as char), '원') as menuPrice
+        from MenuOption
+        where menuIdx=? and optCatIdx =? and isDeleted='N' ;    
+";
+    $st = $pdo->prepare($query);
+    $st->execute([$menuIdx,$catIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+    // fetcho one으로 해서 for문돌리기 행전체수만큼
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+function hartStore($storeIdx,$userIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "INSERT INTO Hart (storeIdx,userIdx) VALUES (?,?);";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$storeIdx,$userIdx]);
+
+    $st = null;
+    $pdo = null;
+
+    return ['storeIdx'=>$storeIdx,'userIdx'=>$userIdx];
+}
+
+function deleteHart($storeIdx,$userIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "update Hart set isDeleted='Y' where storeIdx=? and userIdx=?;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$storeIdx,$userIdx]);
+
+    $st = null;
+    $pdo = null;
+
+    return "성공";
+}
+
+function isHart($storeIdx,$userIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "select EXISTS(select storeIdx from Hart where storeIdx = ? and userIdx=? and isDeleted='N') exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$storeIdx,$userIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]['exist']);
 }
