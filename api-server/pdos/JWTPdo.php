@@ -64,7 +64,7 @@ function login($mb_uid)
 }
 
 
-function signUp($mb_nickname,$mb_uid,$mb_email)
+function signUpKakao($mb_nickname,$mb_uid,$mb_email)
 {
 
 //    $USER_API_URL= "https://kapi.kakao.com/v2/user/me";
@@ -92,6 +92,21 @@ function signUp($mb_nickname,$mb_uid,$mb_email)
     $query = "insert into UserInfo(userName,userId,email) values (?,?,?);";
     $st = $pdo->prepare($query);
     $st->execute([$mb_nickname,$mb_uid,$mb_email]);
+    $userIdx=$pdo->lastInsertId();
+    $st = null;
+    $pdo = null;
+    return $userIdx;
+
+}
+
+function signUpNaver($mb_name,$mb_uid,$mb_mobile)
+{
+
+    $pdo = pdoSqlConnect();
+
+    $query = "insert into UserInfo(userName,userId, phoneNumber) values (?,?,?);";
+    $st = $pdo->prepare($query);
+    $st->execute([$mb_name,$mb_uid,$mb_mobile]);
     $userIdx=$pdo->lastInsertId();
     $st = null;
     $pdo = null;

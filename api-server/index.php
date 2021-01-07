@@ -49,8 +49,8 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     // 즐겨찾기 추가
     $r->addRoute('POST', '/stores/hart', ['StoreController', 'hartStore']);
     /* ********************************* jwt ********************************* */
-    $r->addRoute('POST', '/kakao-login', ['JWTController', 'createKakaoJwt']);
-    $r->addRoute('POST', '/naver-login', ['JWTController', 'createNaverJwt']);
+    $r->addRoute('POST', '/kakao-login', ['JWTController', 'createKakaoJwt']); // 바디
+    $r->addRoute('POST', '/naver-login', ['JWTController', 'createNaverJwt']); // 바디
 
     /* ********************************* address ********************************* */
     // 주소 설정 api
