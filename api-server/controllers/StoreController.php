@@ -284,10 +284,50 @@ try {
 
         case "createCart":
             http_response_code(200);
-            // 가격, 옵션인덱스=배열  입력
-//            $res->result=$req->cart;
+            $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
+            $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
+            if (empty($jwt)){
+                $res->isSuccess = FALSE;
+                $res->code = 2000;
+                $res->message = "토큰을 입력하세요.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
+                $res->isSuccess = FALSE;
+                $res->code = 2001;
+                $res->message = "유효하지 않은 토큰입니다.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            $cart=$req->cart;
+            $i=0;
+            while(count($cart)>$i){
+                $menuIdx=$cart[$i]->menuIdx;
+                $quantity=$cart[$i]->quantity;
+                $optionList=$cart[$i]->optionList; // array로 출력됨
+//                echo count($optionList);
+//                echo $optionList[0];
 
-            $res->result=$req->cart[0];
+                $res->cart=addCart($userIdxInToken,$menuIdx,$quantity);
+                $j=0;
+                while(count($optionList)>$j){
+//                    echo $optionList[$j];
+
+                    $res->optionCart=addOptionCart($userIdxInToken,$menuIdx,$optionList[$j]);
+                    //출력부분만바꿔 
+                    $j++;
+                }
+                $i++;
+//                $res->optionCart=addOptionCart($userIdxInToken,$menuIdx,$optionIdx);//옵션인덱스는 배열로
+            }
+
+//            $res->userIdx=$userIdxInToken;
+//            $res->count=count($req->cart);
+            //$res->result1=$req->cart[0]->optionIdx;
+//            $res->result2=$req->cart[1];
             $res->isSuccess = TRUE;
             $res->code = 1000;
             $res->message = "카트 담기 성공";

@@ -644,3 +644,31 @@ function isHart($storeIdx,$userIdx)
 
     return intval($res[0]['exist']);
 }
+
+function addCart($userIdxInToken,$menuIdx,$quantity)
+{
+    $pdo = pdoSqlConnect();
+    $query = "insert into Cart(userIdx,menuIdx,quantity) values(?,?,?);";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdxInToken,$menuIdx,$quantity]);
+
+    $st = null;
+    $pdo = null;
+
+    return ['userIdx'=>$userIdxInToken,'menuIdx'=>$menuIdx,'quantity'=>$quantity];
+}
+
+function addOptionCart($userIdxInToken,$menuIdx,$optionIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "insert into OptionCart(userIdx,menuIdx,optIdx) values(?,?,?);";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdxInToken,$menuIdx,$optionIdx]);
+
+    $st = null;
+    $pdo = null;
+
+    return ['userIdx'=>$userIdxInToken,'menuIdx'=>$menuIdx,'optionIdx'=>$optionIdx];
+}
