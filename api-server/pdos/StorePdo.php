@@ -302,7 +302,47 @@ function getStoreOne($storeIdx)
     return $res[0];
 }
 
-function getChoiceStoreOne($storeIdx)
+function filterAllCoupon($storeIdx,$cheetah,$deliveryfee,$mincost) //여기
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+
+        select s.storeIdx, s.storeName, s.storeStar,
+               (select count(*) from Review as r  where s.storeIdx=r.storeIdx and isDeleted='N') as reviewCount,
+               concat('배달비 ',cast(FORMAT(s.deliveryFee, 0) as char), '원') as deliveryFee,
+               s.deliveryTime,
+               case
+                   when exists(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                                from Coupon as c
+                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
+                       then (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                                from Coupon as c
+                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
+                       else '-1'
+               end as coupon,
+                concat(ROUND((6371 *acos(cos(radians(37.3343011791693)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(126.86714856212525))
+                    + sin(radians(37.3343011791693)) * sin(radians(s.latitude)))) ,1),'km') as distance
+        from Store as s
+        where s.isDeleted='N' and s.storeIdx=? and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee>=if(isnull(?),s.deliveryFee,?)
+          and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
+         and EXISTS(select couponIdx from StoreCoupon where storeIdx=?);
+";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$storeIdx,$cheetah,$cheetah,$deliveryfee,$deliveryfee,$mincost,$mincost,$storeIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res[0];
+}
+
+
+function filterAll($storeIdx,$cheetah,$deliveryfee,$mincost) //여기
 {
     $pdo = pdoSqlConnect();
     $query = "
@@ -324,11 +364,11 @@ function getChoiceStoreOne($storeIdx)
                 concat(ROUND((6371 *acos(cos(radians(37.3343011791693)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(126.86714856212525))
                     + sin(radians(37.3343011791693)) * sin(radians(s.latitude)))) ,1),'km') as distance
         from Store as s
-        where s.isDeleted='N' and s.storeIdx=?;
-";
+        where s.isDeleted='N' and s.storeIdx=? and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee<=if(isnull(?),s.deliveryFee,?)
+          and s.minOrderCost>=if(isnull(?),s.minOrderCost,?);";
 
     $st = $pdo->prepare($query);
-    $st->execute([$storeIdx]);
+    $st->execute([$storeIdx,$cheetah,$cheetah,$deliveryfee,$deliveryfee,$mincost,$mincost]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -337,6 +377,7 @@ function getChoiceStoreOne($storeIdx)
 
     return $res[0];
 }
+
 
 function getStoreImg($storeIdx)
 {
@@ -645,18 +686,18 @@ function isHart($storeIdx,$userIdx)
     return intval($res[0]['exist']);
 }
 
-function addCart($userIdxInToken,$menuIdx,$quantity)
+function addCart($userIdxInToken,$menuIdx,$quantity,$storeIdx)
 {
     $pdo = pdoSqlConnect();
-    $query = "insert into Cart(userIdx,menuIdx,quantity) values(?,?,?);";
+    $query = "insert into Cart(userIdx,menuIdx,quantity,storeIdx) values(?,?,?,?);";
 
     $st = $pdo->prepare($query);
-    $st->execute([$userIdxInToken,$menuIdx,$quantity]);
+    $st->execute([$userIdxInToken,$menuIdx,$quantity,$storeIdx]);
 
     $st = null;
     $pdo = null;
 
-    return ['userIdx'=>$userIdxInToken,'menuIdx'=>$menuIdx,'quantity'=>$quantity];
+    return ['userIdx'=>$userIdxInToken,'storeIdx'=>$storeIdx,'menuIdx'=>$menuIdx,'quantity'=>$quantity];
 }
 
 function addOptionCart($userIdxInToken,$menuIdx,$optionIdx)
@@ -670,5 +711,134 @@ function addOptionCart($userIdxInToken,$menuIdx,$optionIdx)
     $st = null;
     $pdo = null;
 
-    return ['userIdx'=>$userIdxInToken,'menuIdx'=>$menuIdx,'optionIdx'=>$optionIdx];
+    return $optionIdx;
 }
+
+function mandatoryCat($menuIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "select optCatIdx from MenuOptionCat where menuIdx=? and mandatory='Y';";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$menuIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function mandatoryCatOne($menuIdx,$menuOptIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+        select o.optCatIdx
+        from MenuOption as o
+        join MenuOptionCat as oc on o.optCatIdx=oc.optCatIdx and o.menuIdx=oc.menuIdx
+        where o.isDeleted='N' and o.menuIdx=? and o.menuOptIdx=? and oc.mandatory='Y';";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$menuIdx,$menuOptIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchColumn();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function getInputOptCat($menuIdx,$menuOptIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+        select o.optCatIdx
+        from MenuOption as o
+        join MenuOptionCat as oc on o.optCatIdx=oc.optCatIdx and o.menuIdx=oc.menuIdx
+        where o.isDeleted='N' and o.menuIdx=? and o.menuOptIdx=? ;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$menuIdx,$menuOptIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchColumn();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function getMaxSelect($menuIdx,$menuOptIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+        select oc.maxSelect
+        from MenuOption as o
+        join MenuOptionCat as oc on o.optCatIdx=oc.optCatIdx and o.menuIdx=oc.menuIdx
+        where o.isDeleted='N' and  oc.isDeleted='N' and  o.menuIdx=? and o.menuOptIdx=? ;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$menuIdx,$menuOptIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchColumn();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function getStoreIdx($menuIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "select storeIdx from Menu where isDeleted='N'and menuIdx=?;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$menuIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchColumn();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function isDifferentStore($storeIdx,$userIdxInToken)
+{
+    $pdo = pdoSqlConnect();
+    $query = "select EXISTS(select storeIdx from Cart where isDeleted ='N' and storeIdx = ? and userIdx=? ) exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$storeIdx,$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]['exist']);
+}
+function isCartInUser($userIdxInToken)
+{
+    $pdo = pdoSqlConnect();
+    $query = "select EXISTS(select storeIdx from Cart where isDeleted ='N' and userIdx=? ) exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]['exist']);
+}
+

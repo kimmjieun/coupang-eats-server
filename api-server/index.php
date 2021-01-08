@@ -35,7 +35,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     // 홈화면조회
     $r->addRoute('GET', '/home', ['StoreController', 'getHome']);
     // 골라먹는맛집조회
-    //$r->addRoute('GET', '/stores', ['StoreController', 'getChoiceStore']);
+    $r->addRoute('GET', '/hometest', ['StoreController', 'getChoiceStore']);
     // 골라먹는맛집 세부 조회
     $r->addRoute('GET', '/stores/{storeIdx}', ['StoreController', 'getStoreDetail']);
     // 인기프랜차이즈 조회
@@ -46,6 +46,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/menus/{menuIdx}', ['StoreController', 'getMenuOption']);
     // 카트담기
     $r->addRoute('POST', '/cart', ['StoreController', 'createCart']);
+    // 카트담기
     // 즐겨찾기 추가
     $r->addRoute('POST', '/stores/hart', ['StoreController', 'hartStore']);
     /* ********************************* jwt ********************************* */
