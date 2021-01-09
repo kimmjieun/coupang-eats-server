@@ -35,7 +35,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     // 홈화면조회
     //$r->addRoute('GET', '/home', ['StoreController', 'getHome']);
     // 홈화면조회
-    $r->addRoute('GET', '/home', ['StoreController', 'getHome']);
+    $r->addRoute('GET', '/home', ['StoreController', 'getHome2']);
     // 골라먹는맛집 세부 조회
     $r->addRoute('GET', '/stores/{storeIdx}', ['StoreController', 'getStoreDetail']);
     // 인기프랜차이즈 조회

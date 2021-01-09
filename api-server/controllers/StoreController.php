@@ -374,6 +374,662 @@ try {
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
+        case "getHome2":
+            http_response_code(200);
+//            $userIdxInToken=14;
+            $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
+            $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
+            $latitude = $_GET['latitude'];
+            $longitude = $_GET['longitude'];
+            $address= $_GET['address'];
+            $sort = $_GET['sort'];
+            $cheetah = $_GET['cheetah'];
+            $deliveryfee = $_GET['deliveryfee'];
+            $mincost = $_GET['mincost'];
+            $coupon = $_GET['coupon'];
+            if (empty($jwt)){
+//                $latitude = $_GET['latitude'];
+//                $longitude = $_GET['longitude'];
+//                $address= $_GET['address'];
+                if(empty($latitude) | empty($longitude) | empty($address)){
+                    $res->isSuccess = FALSE;
+                    $res->code = 2010;
+                    $res->message = "주소를 입력하세요";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    break;
+                }
+                $latitude = floatval($latitude);
+                $longitude =floatval($longitude);
+//                $sort = $_GET['sort'];
+//                $cheetah = $_GET['cheetah'];
+//                $deliveryfee = $_GET['deliveryfee'];
+//                $mincost = $_GET['mincost'];
+//                $coupon = $_GET['coupon'];
+
+                if (is_string($sort)) {
+                    if (!empty((int)$sort)) {
+                        $sort = (int)$sort;
+                    } else {
+                        $res->isSuccess = FALSE;
+                        $res->code = 2002;
+                        $res->message = "맞지않는데이터타입(sort)";
+                        echo json_encode($res, JSON_NUMERIC_CHECK);
+                        break;
+                    }
+                }
+                if (is_string($deliveryfee)) {
+                    if (!empty((int)$deliveryfee)) {
+                        $deliveryfee = (int)$deliveryfee;
+//                    echo 'int'.$deliveryfee;
+                    } else {
+//                    echo 'string'.$deliveryfee;
+                        $res->isSuccess = FALSE;
+                        $res->code = 2003;
+                        $res->message = "맞지않는데이터타입(deliveryfee)";
+                        echo json_encode($res, JSON_NUMERIC_CHECK);
+                        break;
+                    }
+                }
+                if (is_string($mincost)) {
+                    if (!empty((int)$mincost)) {
+                        $mincost = (int)$mincost;
+//                    echo 'int'.$mincost;
+                    } else {
+//                    echo 'string'.$mincost;
+                        $res->isSuccess = FALSE;
+                        $res->code = 2004;
+                        $res->message = "맞지않는데이터타입(mincost)";
+                        echo json_encode($res, JSON_NUMERIC_CHECK);
+                        break;
+                    }
+                }
+                if (is_string($cheetah) and !empty($cheetah)) {
+                    if ($cheetah != 'Y') {
+                        $res->isSuccess = FALSE;
+                        $res->code = 2005;
+                        $res->message = "cheetah Y만 입력가능";
+                        echo json_encode($res, JSON_NUMERIC_CHECK);
+                        break;
+                    }
+
+                }
+                if (is_string($coupon) and !empty($coupon)) {
+                    if ($coupon != 'Y') {
+                        $res->isSuccess = FALSE;
+                        $res->code = 2006;
+                        $res->message = "coupon Y만 입력가능";
+                        echo json_encode($res, JSON_NUMERIC_CHECK);
+                        break;
+                    }
+
+                }
+
+                if ($cheetah != 'Y' and !empty($cheetah)) { //널 도가능
+                    $res->isSuccess = FALSE;
+                    $res->code = 2005;
+                    $res->message = "치타 Y만 입력가능 ";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    break;
+                }
+                if ($coupon != 'Y' and !empty($cheetah)) { //널 도가능
+                    $res->isSuccess = FALSE;
+                    $res->code = 2006;
+                    $res->message = "쿠폰 Y만 입력가능 ";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    break;
+                }
+
+                $mincostList = [5000, 10000, 12000, 15000];
+                if (!in_array($mincost, $mincostList) and !empty($mincost)) {
+                    $res->isSuccess = FALSE;
+                    $res->code = 2007;
+                    $res->message = "최소주문비용 5000,10000,12000,15000원만 입력가능 ";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    break;
+                }
+                $deliveryfeeList = [-1, 1000, 2000, 3000];
+                if (!in_array($deliveryfee, $deliveryfeeList) and !empty($deliveryfee)) {
+                    $res->isSuccess = FALSE;
+                    $res->code = 2008;
+                    $res->message = "배달비 -1(무료배달),1000,2000,3000원만 입력가능";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    break;
+                }
+
+                $sortList = [1, 2, 3];
+                if (!in_array($sort, $sortList) and !empty($sort)) {
+                    $res->isSuccess = FALSE;
+                    $res->code = 2009;
+                    $res->message = "정렬 1,2,3만 입력가능";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    break;
+                }
+//            echo '성공';
+//            break;
+                //4개 한번에 넣어서 할수있게
+                if (empty($sort)) { // 신규매장순
+//                    echo 'notsort';
+
+                    if ($coupon = 'Y' && !empty($coupon)) {
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByNew1';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew1No($cheetah, $mincost, $userIdxInToken,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+//                        echo 'getOrderByNew2';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew2No($cheetah, $deliveryfee, $mincost,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+
+                        }
+                    } else {
+
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByNew3';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew3No($cheetah, $mincost,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+//                        echo 'getOrderByNew4';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew4No($cheetah, $deliveryfee, $mincost,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+//                                echo $queryResult[$s++]['storeIdx'];
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+//                            break;
+                        }
+
+                    }
+
+                } else if ($sort == 1) { //신규매장순
+//                echo 'sort1신규매장순 ';
+                    if ($coupon = 'Y' && !empty($coupon)) {
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByNew1';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew1No($cheetah, $mincost,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+//                        echo 'getOrderByNew2';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew2No($cheetah, $deliveryfee, $mincost,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+
+                        }
+                    } else {
+
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByNew3';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew3No($cheetah, $mincost,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+//                        echo 'getOrderByNew4';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew4No($cheetah, $deliveryfee,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        }
+
+                    }
+                } else if ($sort == 2) { //별점높은순
+//                echo '별점높은순 ';
+                    if ($coupon = 'Y' && !empty($coupon)) {
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByStar1';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByStar1No($cheetah, $mincost,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } //if(empty($deliveryfee)|$deliveryfee==1000 |$deliveryfee==2000| $deliveryfee==3000){
+                        else {
+//                        echo 'getOrderByStar2';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByStar2No($cheetah, $deliveryfee,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+
+                        }
+                    } else {
+
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByStar3';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByStar3No($cheetah, $mincost,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+//                        echo 'getOrderByStar4';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByStar4No($cheetah, $deliveryfee, $mincost,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        }
+
+                    }
+                } else if ($sort == 3) { //가까운순
+//                echo '33가까운순 ';
+                    if ($coupon = 'Y' && !empty($coupon)) {
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByNear1';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNear1No($cheetah, $mincost,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+//                        echo 'getOrderByNear2';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNear2No($cheetah, $deliveryfee, $mincost,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+
+                        }
+                    } else {
+
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByStar3';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNear3No($cheetah, $mincost,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+//                        echo 'getOrderByStar4';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNear4No($cheetah, $deliveryfee, $mincost,$latitude,$longitude);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        }
+
+                    }
+                }
+
+                $arrayList = array();
+                $j = 0;
+                while (count($storeIdxList) > $j) {
+                    $temp = array();
+                    $temp = getOrderByOneNo($storeIdxList[$j],$latitude,$longitude);
+                    $i = 0;
+                    $imgList = array();
+                    $queryResult = getStoreImg($storeIdxList[$j]);
+                    while ($i < count($queryResult)) {
+
+                        array_push($imgList, $queryResult[$i++]['storePhoto']);
+                    }
+                    $temp['img'] = $imgList;
+                    array_push($arrayList, $temp);
+                    $j++;
+                }
+
+
+                $res->result->address = $address;
+                $res->result->promotion = getPromotion();
+                $res->result->category = getCategory();
+                $res->result->franchise = getFranchiseNo($latitude,$longitude);
+                $res->result->openStore = getOpenStoreNo($latitude,$longitude);
+                $res->result->mainStore = $arrayList;
+                $res->isSuccess = TRUE;
+                $res->code = 1000;
+                $res->message = "홈화면 조회 성공";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                break;
+            }
+            else {
+                if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
+                    $res->isSuccess = FALSE;
+                    $res->code = 2001;
+                    $res->message = "유효하지 않은 토큰입니다.";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    addErrorLogs($errorLogs, $res, $req);
+                    break;
+                }
+
+                $sort = $_GET['sort'];
+                $cheetah = $_GET['cheetah'];
+                $deliveryfee = $_GET['deliveryfee'];
+                $mincost = $_GET['mincost'];
+                $coupon = $_GET['coupon'];
+
+                if (is_string($sort)) {
+                    if (!empty((int)$sort)) {
+                        $sort = (int)$sort;
+//                    echo 'int'.$sort;
+                    } else {
+//                    echo 'string'.$sort;
+                        $res->isSuccess = FALSE;
+                        $res->code = 2002;
+                        $res->message = "맞지않는데이터타입(sort)";
+                        echo json_encode($res, JSON_NUMERIC_CHECK);
+                        break;
+                    }
+                }
+                if (is_string($deliveryfee)) {
+                    if (!empty((int)$deliveryfee)) {
+                        $deliveryfee = (int)$deliveryfee;
+//                    echo 'int'.$deliveryfee;
+                    } else {
+//                    echo 'string'.$deliveryfee;
+                        $res->isSuccess = FALSE;
+                        $res->code = 2003;
+                        $res->message = "맞지않는데이터타입(deliveryfee)";
+                        echo json_encode($res, JSON_NUMERIC_CHECK);
+                        break;
+                    }
+                }
+                if (is_string($mincost)) {
+                    if (!empty((int)$mincost)) {
+                        $mincost = (int)$mincost;
+//                    echo 'int'.$mincost;
+                    } else {
+//                    echo 'string'.$mincost;
+                        $res->isSuccess = FALSE;
+                        $res->code = 2004;
+                        $res->message = "맞지않는데이터타입(mincost)";
+                        echo json_encode($res, JSON_NUMERIC_CHECK);
+                        break;
+                    }
+                }
+                if (is_string($cheetah) and !empty($cheetah)) {
+                    if ($cheetah != 'Y') {
+                        $res->isSuccess = FALSE;
+                        $res->code = 2005;
+                        $res->message = "cheetah Y만 입력가능";
+                        echo json_encode($res, JSON_NUMERIC_CHECK);
+                        break;
+                    }
+
+                }
+                if (is_string($coupon) and !empty($coupon)) {
+                    if ($coupon != 'Y') {
+                        $res->isSuccess = FALSE;
+                        $res->code = 2006;
+                        $res->message = "coupon Y만 입력가능";
+                        echo json_encode($res, JSON_NUMERIC_CHECK);
+                        break;
+                    }
+
+                }
+
+                if ($cheetah != 'Y' and !empty($cheetah)) { //널 도가능
+                    $res->isSuccess = FALSE;
+                    $res->code = 2005;
+                    $res->message = "치타 Y만 입력가능 ";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    break;
+                }
+                if ($coupon != 'Y' and !empty($cheetah)) { //널 도가능
+                    $res->isSuccess = FALSE;
+                    $res->code = 2006;
+                    $res->message = "쿠폰 Y만 입력가능 ";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    break;
+                }
+
+                $mincostList = [5000, 10000, 12000, 15000];
+                if (!in_array($mincost, $mincostList) and !empty($mincost)) {
+                    $res->isSuccess = FALSE;
+                    $res->code = 2007;
+                    $res->message = "최소주문비용 5000,10000,12000,15000원만 입력가능 ";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    break;
+                }
+                $deliveryfeeList = [-1, 1000, 2000, 3000];
+                if (!in_array($deliveryfee, $deliveryfeeList) and !empty($deliveryfee)) {
+                    $res->isSuccess = FALSE;
+                    $res->code = 2008;
+                    $res->message = "배달비 -1(무료배달),1000,2000,3000원만 입력가능";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    break;
+                }
+
+                $sortList = [1, 2, 3];
+                if (!in_array($sort, $sortList) and !empty($sort)) {
+                    $res->isSuccess = FALSE;
+                    $res->code = 2009;
+                    $res->message = "정렬 1,2,3만 입력가능";
+                    echo json_encode($res, JSON_NUMERIC_CHECK);
+                    break;
+                }
+//            echo '성공';
+//            break;
+                //4개 한번에 넣어서 할수있게
+                if (empty($sort)) { // 신규매장순
+//                echo 'notsort';
+
+                    if ($coupon = 'Y' && !empty($coupon)) {
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByNew1';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew1($cheetah, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+//                        echo 'getOrderByNew2';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew2($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+
+                        }
+                    } else {
+
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByNew3';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew3($cheetah, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+//                        echo 'getOrderByNew4';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew4($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        }
+
+                    }
+
+                } else if ($sort == 1) { //신규매장순
+//                echo 'sort1신규매장순 ';
+                    if ($coupon = 'Y' && !empty($coupon)) {
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByNew1';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew1($cheetah, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+//                        echo 'getOrderByNew2';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew2($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+
+                        }
+                    } else {
+
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByNew3';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew3($cheetah, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+//                        echo 'getOrderByNew4';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNew4($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        }
+
+                    }
+                } else if ($sort == 2) { //별점높은순
+//                echo '별점높은순 ';
+                    if ($coupon = 'Y' && !empty($coupon)) {
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByStar1';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByStar1($cheetah, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } //if(empty($deliveryfee)|$deliveryfee==1000 |$deliveryfee==2000| $deliveryfee==3000){
+                        else {
+//                        echo 'getOrderByStar2';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByStar2($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+
+                        }
+                    } else {
+
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByStar3';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByStar3($cheetah, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+//                        echo 'getOrderByStar4';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByStar4($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        }
+
+                    }
+                } else if ($sort == 3) { //가까운순
+//                echo '33가까운순 ';
+                    if ($coupon = 'Y' && !empty($coupon)) {
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByNear1';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNear1($cheetah, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+//                        echo 'getOrderByNear2';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNear2($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+
+                        }
+                    } else {
+
+                        if ($deliveryfee == -1) {
+//                        echo 'getOrderByStar3';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNear3($cheetah, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+//                        echo 'getOrderByStar4';
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNear4($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        }
+
+                    }
+                }
+                $arrayList = array();
+                $j = 0;
+                while (count($storeIdxList) > $j) {
+                    $temp = array();
+                    $temp = getOrderByOne($storeIdxList[$j], $userIdxInToken);
+                    $i = 0;
+                    $imgList = array();
+                    $queryResult = getStoreImg($storeIdxList[$j]);
+                    while ($i < count($queryResult)) {
+                        array_push($imgList, $queryResult[$i++]['storePhoto']);
+                    }
+                    $temp['img'] = $imgList;
+                    array_push($arrayList, $temp);
+                    $j++;
+                }
+                $res->result->address = getUserAddress($userIdxInToken);
+                $res->result->promotion = getPromotion();
+                $res->result->category = getCategory();
+                $res->result->franchise = getFranchise($userIdxInToken);
+                $res->result->openStore = getOpenStore($userIdxInToken);
+                $res->result->mainStore = $arrayList;
+                $res->isSuccess = TRUE;
+                $res->code = 1000;
+                $res->message = "홈화면 조회 성공";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                break;
+            }
 
 
         case "getStoreDetail":
