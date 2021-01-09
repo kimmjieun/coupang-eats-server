@@ -84,6 +84,8 @@ try {
             $result = curl_exec($ch);
             curl_close($ch);
             $me_responseArr = json_decode($result, true);
+//            echo $me_responseArr['id'].'dd'.$me_responseArr['nickname'];
+//            break;
             if ($me_responseArr['id']) {
                 $mb_uid = 'kakao_'.$me_responseArr['id'];
                 $nickname = 'kakao_'.$me_responseArr['nickname'];

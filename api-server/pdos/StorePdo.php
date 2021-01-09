@@ -168,10 +168,10 @@ function getFranchise($userIdxInToken)
                        else '-1'
                end as coupon,
                 (select sp.storePhoto from StorePhoto as sp where sp.sequence=1 and sp.isDeleted='N' and sp.storeIdx=s.storeIdx) as storePhoto,
-               concat(ROUND((6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-                 + sin(radians(?)) * sin(radians(s.latitude)))) ,1),'km') as distance
-        from Store as s
-        where s.isDeleted='N' and isFranchise='Y' 
+               concat(ROUND((6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
+                 + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ,1),'km') as distance
+        from Store as s, UserInfo as us
+        where s.isDeleted='N' and isFranchise='Y'  and us.isDeleted='N' and us.userIdx=?
                 and TIMESTAMPDIFF(DAY, s.createdAt, current_timestamp())<30
        order by s.createdAt desc limit 5 ;
 ";
