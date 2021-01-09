@@ -5,6 +5,7 @@ require './pdos/IndexPdo.php';
 require './pdos/JWTPdo.php';
 require './pdos/StorePdo.php';
 require './pdos/AddressPdo.php';
+require './pdos/CartPdo.php';
 require './vendor/autoload.php';
 
 
@@ -28,14 +29,13 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/users', ['IndexController', 'getUsers']);
     $r->addRoute('GET', '/users/{userIdx}', ['IndexController', 'getUserDetail']);
     $r->addRoute('POST', '/user', ['IndexController', 'createUser']); // 비밀번호 해싱 예시 추가
-    $r->addRoute('GET', '/test', ['StoreController', 'test']);
-    $r->addRoute('GET', '/test2', ['StoreController', 'test2']);
+
     /* ********************************* Store ********************************* */
   //  $r->addRoute('GET', '/stores', ['StoreController', 'getStore']);
     // 홈화면조회
+    //$r->addRoute('GET', '/home', ['StoreController', 'getHome']);
+    // 홈화면조회
     $r->addRoute('GET', '/home', ['StoreController', 'getHome']);
-    // 골라먹는맛집조회
-    $r->addRoute('GET', '/hometest', ['StoreController', 'getChoiceStore']);
     // 골라먹는맛집 세부 조회
     $r->addRoute('GET', '/stores/{storeIdx}', ['StoreController', 'getStoreDetail']);
     // 인기프랜차이즈 조회
@@ -46,7 +46,6 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/menus/{menuIdx}', ['StoreController', 'getMenuOption']);
     // 카트담기
     $r->addRoute('POST', '/cart', ['StoreController', 'createCart']);
-    // 카트담기
     // 즐겨찾기 추가
     $r->addRoute('POST', '/stores/hart', ['StoreController', 'hartStore']);
     /* ********************************* jwt ********************************* */
@@ -56,12 +55,13 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     /* ********************************* address ********************************* */
     // 주소 설정 api
     $r->addRoute('PATCH', '/address', ['AddressController', 'setAddress']);
-    // 현재위치 주소 설정 api
-//    $r->addRoute('POST', '/current-address', ['AddressController', 'setCurrentAddress']);
-    // 키워드 주소 검색
-    //$r->addRoute('GET', '/selected-address', ['AddressController', 'getKeywordAddress']);
-    // 키워드 주소 설정 api -> 조회후 선택
-    //$r->addRoute('POST', '/selected-address', ['AddressController', 'setSelectedAddress']);
+
+    /* ********************************* cart ********************************* */
+    // 카트담기
+//    $r->addRoute('POST', '/cart', ['CartController', 'createCart']);
+    $r->addRoute('POST', '/carts', ['CartController', 'putInCart']);
+    // 카트보기
+    $r->addRoute('GET', '/carts', ['CartController', 'getCart']);
 
 //    $r->addRoute('GET', '/users', 'get_all_users_handler');
 //    // {id} must be a number (\d+)
@@ -129,7 +129,11 @@ switch ($routeInfo[0]) {
                 $vars = $routeInfo[2];
                 require './controllers/AddressController.php';
                 break;
-
+            case 'CartController':
+                $handler = $routeInfo[1][1];
+                $vars = $routeInfo[2];
+                require './controllers/CartController.php';
+                break;
         }
 
         break;

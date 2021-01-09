@@ -23,22 +23,24 @@ try {
 
         case "setAddress":
             http_response_code(200);
-//            if(empty($req->latitude)| empty($req->longitude)){
-//                $res->isSuccess = FALSE;
-//                $res->code = 2000;
-//                $res->message = "위도, 경도를 입력하세요. ";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                addErrorLogs($errorLogs, $res, $req);
-//                break;
-//            }
-//            if(!isValidLatLon($req->latitude,$req->longitude)){
-//                $res->isSuccess = FALSE;
-//                $res->code = 2001;
-//                $res->message = "해당 위치가 등록되어있지않습니다. ";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                addErrorLogs($errorLogs, $res, $req);
-//                break;
-//            }
+            $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
+            $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
+            if (empty($jwt)){
+                $res->isSuccess = FALSE;
+                $res->code = 2005;
+                $res->message = "토큰을 입력하세요.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
+                $res->isSuccess = FALSE;
+                $res->code = 2006;
+                $res->message = "유효하지 않은 토큰입니다.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
 
             if(empty($req->address)){
                 $res->isSuccess = FALSE;
@@ -83,8 +85,8 @@ try {
             //$result=setCurrentAddress($req->latitude,$req->longitude);
             //$address=$result['address'].' '.$req->addressDetail;
             //$buildingName=$result['buildingName'];
-            $userIdx=1;
-            updateDeliveryAddress($req->latitude,$req->longitude,$req->address,$req->buildingName,$req->addressDetail,$userIdx);
+           // $userIdx=1;
+            updateDeliveryAddress($req->latitude,$req->longitude,$req->address,$req->buildingName,$req->addressDetail,$userIdxInToken);
 
             $res->isSuccess = TRUE;
             $res->code = 1000;

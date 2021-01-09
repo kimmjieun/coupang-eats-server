@@ -55,7 +55,7 @@ function updateDeliveryAddress($latitude,$longitude,$address,$buildingName,$addr
 
 
     $st = $pdo->prepare($query);
-    $st->execute([$latitude,$longitude,$address,$buildingName,$addressDetail,$userIdx]);
+    $st->execute([$latitude,$longitude,$address,$addressDetail,$buildingName,$userIdx]);
 
     $st = null;
     $pdo = null;
