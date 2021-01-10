@@ -70,11 +70,13 @@ function getFranchiseNo($latitude,$longitude)
                  + sin(radians(?)) * sin(radians(s.latitude)))) ,1),'km') as distance
         from Store as s
         where s.isDeleted='N' and isFranchise='Y'
+                  and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
+    + sin(radians(?)) * sin(radians(s.latitude)))) < 5
         order by s.createdAt desc limit 5;";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
-    $st->execute([$latitude,$longitude,$latitude]);
+    $st->execute([$latitude,$longitude,$latitude,$latitude,$longitude,$latitude]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -119,14 +121,16 @@ function getOpenStoreNo($latitude,$longitude)
                concat(ROUND((6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
                  + sin(radians(?)) * sin(radians(s.latitude)))) ,1),'km') as distance
         from Store as s
-        where s.isDeleted='N' and isFranchise='Y'
+        where s.isDeleted='N' 
                 and TIMESTAMPDIFF(DAY, s.createdAt, current_timestamp())<30
+              and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
+                 + sin(radians(?)) * sin(radians(s.latitude)))) < 5
        order by s.createdAt desc limit 5 ;
 ";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
-    $st->execute([$latitude,$longitude,$latitude]);
+    $st->execute([$latitude,$longitude,$latitude,$latitude,$longitude,$latitude]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -171,8 +175,9 @@ function getFranchise($userIdxInToken)
                concat(ROUND((6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
                  + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ,1),'km') as distance
         from Store as s, UserInfo as us
-        where s.isDeleted='N' and isFranchise='Y'  and us.isDeleted='N' and us.userIdx=?
-                and TIMESTAMPDIFF(DAY, s.createdAt, current_timestamp())<30
+        where s.isDeleted='N' and isFranchise='Y'  and us.isDeleted='N' and us.userIdx=? 
+              and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
+                 + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
        order by s.createdAt desc limit 5 ;
 ";
 
@@ -223,8 +228,10 @@ function getOpenStore($userIdxInToken)
                concat(ROUND((6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
                  + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ,1),'km') as distance
         from Store as s, UserInfo as us
-        where s.isDeleted='N' and isFranchise='Y' and us.isDeleted='N' and us.userIdx=?
+        where s.isDeleted='N' and us.isDeleted='N' and us.userIdx=?
                 and TIMESTAMPDIFF(DAY, s.createdAt, current_timestamp())<30
+              and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
+                 + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
        order by s.createdAt desc limit 5 ;
 ";
 
@@ -1587,6 +1594,8 @@ function hartStore($storeIdx,$userIdx)
     return ['storeIdx'=>$storeIdx,'userIdx'=>$userIdx];
 }
 
+
+
 function deleteHart($storeIdx,$userIdx)
 {
     $pdo = pdoSqlConnect();
@@ -1617,7 +1626,113 @@ function isHart($storeIdx,$userIdx)
     return intval($res[0]['exist']);
 }
 
+function getHartStore($userIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+       select s.storeIdx,
+                CASE
+                   WHEN CHAR_LENGTH(s.storeName) > 10
+                       THEN concat(LEFT(s.storeName, 10), '...')
+                   ELSE s.storeName
+               END AS storeName,
+                (select ROUND(avg(reviewStar),1) as avg
+                from Review as r
+                where r.storeIdx=s.storeIdx
+                group by storeIdx) as storeStar,
+               (select count(*) from Review as r  where s.storeIdx=r.storeIdx and isDeleted='N') as reviewCount,
+                CASE
+                   WHEN s.deliveryFee=-1
+                       THEN '무료배달'
+                   ELSE concat('배달비 ',cast(FORMAT(s.deliveryFee, 0) as char), '원')
+               END AS deliveryFee,
+               s.deliveryTime ,
+               case
+                   when exists(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                                from Coupon as c
+                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
+                       then (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                                from Coupon as c
+                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
+                       else '-1'
+               end as coupon,
+                (select sp.storePhoto from StorePhoto as sp where sp.sequence=1 and sp.isDeleted='N' and sp.storeIdx=s.storeIdx) as storePhoto,
+               concat(ROUND((6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
+                 + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ,1),'km') as distance,
+              s.isCheetah
+        from Store as s, UserInfo as us
+        where s.isDeleted='N' and us.isDeleted='N' and us.userIdx=?
+            and s.storeIdx IN (select storeIdx
+                            from Hart
+                            where userIdx=? and isDeleted='N')
+       order by s.createdAt desc ;    
+    ";
 
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdx,$userIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+
+function getHartCount($userIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select count(storeIdx) as count
+from Hart
+where userIdx=? and isDeleted='N';
+    ";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchColumn();
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+
+function getPromotionDetail($promotionIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select title,promotionDetailPhoto
+from Promotion
+where isDeleted='N' and promotionIdx=? ;
+    ";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$promotionIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+    $st = null;
+    $pdo = null;
+
+    return $res;
+
+}
+function isValidPromotion($promotionIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "select EXISTS(select promotionIdx from Promotion where isDeleted ='N' and promotionIdx = ? ) exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$promotionIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]['exist']);
+}
 
 function getStoreIdx($menuIdx)
 {

@@ -48,6 +48,15 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('POST', '/cart', ['StoreController', 'createCart']);
     // 즐겨찾기 추가
     $r->addRoute('POST', '/stores/hart', ['StoreController', 'hartStore']);
+    // 즐겨찾기 조회
+    $r->addRoute('GET', '/harts', ['StoreController', 'getHartStore']);
+    // 프로모션 세부조회 /home/promotions/:promotionIdx
+    $r->addRoute('GET', '/promotions/{promotionIdx}', ['StoreController', 'getPromotionDetail']);
+    // 카테고리 조회 API
+    $r->addRoute('GET', '/category', ['StoreController', 'getCategory']);
+    // 쿠폰받기 API
+    $r->addRoute('POST', '/stores/{storeIdx}/coupon', ['StoreController', 'receiveCoupon']);
+
     /* ********************************* jwt ********************************* */
     $r->addRoute('POST', '/kakao-login', ['JWTController', 'createKakaoJwt']); // 바디
     $r->addRoute('POST', '/naver-login', ['JWTController', 'createNaverJwt']); // 바디

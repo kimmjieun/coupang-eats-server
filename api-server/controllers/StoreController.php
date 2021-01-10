@@ -1156,6 +1156,7 @@ try {
 
         case "hartStore":
             http_response_code(200);
+//            $userIdxInToken=14;
             $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
             $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
             if (empty($jwt)){
@@ -1200,7 +1201,99 @@ try {
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
+        case "getHartStore":
+            http_response_code(200);
+//            $userIdxInToken=14;
+            $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
+            $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
+            if (empty($jwt)){
+                $res->isSuccess = FALSE;
+                $res->code = 2000;
+                $res->message = "토큰을 입력하세요.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
+                $res->isSuccess = FALSE;
+                $res->code = 2001;
+                $res->message = "유효하지 않은 토큰입니다.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
 
+
+            $res->hartCount = getHartCount($userIdxInToken);
+            $res->hartStore = getHartStore($userIdxInToken);
+            $res->isSuccess = TRUE;
+            $res->code = 1000;
+            $res->message = "즐겨찾기 조회 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "getPromotionDetail":
+            http_response_code(200);
+            if(!isValidPromotion($vars['promotionIdx'])){
+                $res->isSuccess = FALSE;
+                $res->code = 2000;
+                $res->message = "없는 프로모션 인덱스";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                break;
+            }
+
+            $res->result = getPromotionDetail($vars['promotionIdx']);
+            $res->isSuccess = TRUE;
+            $res->code = 1000;
+            $res->message = "프로모션 세부조회 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+        case "getCategory":
+            http_response_code(200);
+
+            $res->result = getCategory();
+            $res->isSuccess = TRUE;
+            $res->code = 1000;
+            $res->message = "카테고리 조회 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+//        case "receiveCoupon":
+//            http_response_code(200);
+////            $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
+////            $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
+////            if (empty($jwt)){
+////                $res->isSuccess = FALSE;
+////                $res->code = 2000;
+////                $res->message = "토큰을 입력하세요.";
+////                echo json_encode($res, JSON_NUMERIC_CHECK);
+////                addErrorLogs($errorLogs, $res, $req);
+////                return;
+////            }
+////            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
+////                $res->isSuccess = FALSE;
+////                $res->code = 2001;
+////                $res->message = "유효하지 않은 토큰입니다.";
+////                echo json_encode($res, JSON_NUMERIC_CHECK);
+////                addErrorLogs($errorLogs, $res, $req);
+////                return;
+////            }
+//            $userIdxInToken=14;
+//            if(isValidCoupon($vars['couponIdx'])){
+//                $res->isSuccess = FALSE;
+//                $res->code = 2002;
+//                $res->message = "이미 있는 쿠폰입니다. ";
+//                echo json_encode($res, JSON_NUMERIC_CHECK);
+//                break;
+//            }
+//            // 이미 받았다면 발급완료된 쿠폰입니다
+//            $res->result = receiveCoupon($vars['couponIdx']);
+//            $res->isSuccess = TRUE;
+//            $res->code = 1000;
+//            $res->message = "쿠폰 받기 성공";
+//            echo json_encode($res, JSON_NUMERIC_CHECK);
+//            break;
     }
 } catch (\Exception $e) {
     return getSQLErrorException($errorLogs, $e, $req);
