@@ -6,6 +6,7 @@ require './pdos/JWTPdo.php';
 require './pdos/StorePdo.php';
 require './pdos/AddressPdo.php';
 require './pdos/CartPdo.php';
+require './pdos/PayPdo.php';
 require './vendor/autoload.php';
 
 
@@ -44,8 +45,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     //$r->addRoute('GET', '/new-stores', ['StoreController', 'getNewStore']);
     // 메뉴 세부조회
     $r->addRoute('GET', '/menus/{menuIdx}', ['StoreController', 'getMenuOption']);
-    // 카트담기
-    $r->addRoute('POST', '/cart', ['StoreController', 'createCart']);
+
     // 즐겨찾기 추가
     $r->addRoute('POST', '/stores/hart', ['StoreController', 'hartStore']);
     // 즐겨찾기 조회
@@ -54,6 +54,8 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/promotions/{promotionIdx}', ['StoreController', 'getPromotionDetail']);
     // 카테고리 조회 API
     $r->addRoute('GET', '/category', ['StoreController', 'getCategory']);
+    // 매장/원산지 정보조회 API
+//    $r->addRoute('POST', '/stores/{storeIdx}/intro', ['StoreController', 'getStoreIntroduce']);
     // 쿠폰받기 API
     $r->addRoute('POST', '/stores/{storeIdx}/coupon', ['StoreController', 'receiveCoupon']);
 
@@ -68,9 +70,17 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     /* ********************************* cart ********************************* */
     // 카트담기
 //    $r->addRoute('POST', '/cart', ['CartController', 'createCart']);
-    $r->addRoute('POST', '/carts', ['CartController', 'putInCart']);
+    // 카트담기
+//    $r->addRoute('POST', '/cart', ['StoreController', 'createCart']);
+    $r->addRoute('POST', '/carts', ['CartController', 'addCart']);
+    $r->addRoute('POST', '/newcarts', ['CartController', 'addNewCart']);
     // 카트보기
     $r->addRoute('GET', '/carts', ['CartController', 'getCart']);
+    // 주문하기
+    $r->addRoute('POST', '/order', ['CartController', 'getOrder']);
+
+    /* ********************************* pay ********************************* */
+    $r->addRoute('GET', '/payment', ['PayController', 'pay']);
 
 //    $r->addRoute('GET', '/users', 'get_all_users_handler');
 //    // {id} must be a number (\d+)
@@ -142,6 +152,11 @@ switch ($routeInfo[0]) {
                 $handler = $routeInfo[1][1];
                 $vars = $routeInfo[2];
                 require './controllers/CartController.php';
+                break;
+            case 'PayController':
+                $handler = $routeInfo[1][1];
+                $vars = $routeInfo[2];
+                require './controllers/PayController.php';
                 break;
         }
 

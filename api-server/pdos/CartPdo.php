@@ -1,5 +1,54 @@
 <?php
 
+function deleteCart($userIdxInToken)
+{
+    $pdo = pdoSqlConnect();
+
+    $querydeleteCart="update Cart set isDeleted='Y' where userIdx=? and isDeleted='N';";
+    $querydeleteCartOption="update OptionCart set isDeleted='Y' where userIdx=? and isDeleted='N';";
+
+    try {
+        $st4 = $pdo->prepare($querydeleteCart);
+        $st5 = $pdo->prepare($querydeleteCartOption);
+        $pdo->beginTransaction();
+
+        $st4->execute([$userIdxInToken]);
+        $st5->execute([$userIdxInToken]);
+
+        $pdo->commit();
+    }
+    catch (PDOException $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollback();
+            // If we got here our two data updates are not in the database
+        }
+        //throw $e;
+        return $e->getMessage();
+    }
+
+
+    $st4 = null;
+    $st5 = null;
+    $pdo = null;
+
+}
+
+function isValidCart($storeIdx,$menuIdx,$quantity,$userIdxInToken)
+{
+    $pdo = pdoSqlConnect();
+    $query = "select EXISTS(select storeIdx from Cart 
+                    where isDeleted ='N' and storeIdx = ? and menuIdx=? and quantity =? and userIdx=?) exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$storeIdx,$menuIdx,$quantity,$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]['exist']);
+}
 
 function isDifferentStore($storeIdx,$userIdxInToken)
 {
@@ -47,6 +96,27 @@ function mandatoryCat($menuIdx)
 
 
     return $res;
+}
+
+function isValidMandatoryCatOne($menuIdx,$menuOptIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select exists(        select o.optCatIdx
+        from MenuOption as o
+        join MenuOptionCat as oc on o.optCatIdx=oc.optCatIdx and o.menuIdx=oc.menuIdx
+        where o.isDeleted='N' and o.menuIdx=? and o.menuOptIdx=? and oc.mandatory='Y')exist";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$menuIdx,$menuOptIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+    return intval($res[0]['exist']);
+
+
 }
 
 function mandatoryCatOne($menuIdx,$menuOptIdx)
@@ -143,3 +213,328 @@ function addOptionCart($userIdxInToken,$menuIdx,$optionIdx)
 }
 
 
+
+
+function getDeliveryAddress($userIdxInToken)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select deliveryBuildingName, concat(deliveryAddress, ' ',deliveryAddressDetail) as deliveryAddress
+from UserInfo
+where isDeleted='N' and userIdx=?;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function getStore($userIdxInToken)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select distinct
+(select s.storeName from Store as s where s.storeIdx=c.storeIdx ) as storeName,
+(select s.minOrderCost from Store as s where s.storeIdx=c.storeIdx ) as minOrderCost
+from Cart as c
+where c.isDeleted='N' and c.userIdx=?;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function getStoreIdx($userIdxInToken)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select distinct
+(select s.storeIdx from Store as s where s.storeIdx=c.storeIdx ) as storeIdx
+from Cart as c
+where c.isDeleted='N' and c.userIdx=?;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchColumn();
+
+    $st = null;
+    $pdo = null;
+    return $res;
+}
+
+function getCartList($userIdxInToken)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select (select menuIdx from Menu as m where m.isDeleted='N' and c.menuIdx=m.menuIdx) as menuIdx,
+       c.quantity,
+       (select menuName from Menu as m where m.isDeleted='N' and c.menuIdx=m.menuIdx) as menuName
+from Cart as c
+where c.isDeleted='N' and c.userIdx=? ; ";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function getOption($menuIdx,$userIdxInToken)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select oc.optIdx,mo.menuOptName,mo.optPrice
+from OptionCart as oc
+join MenuOption as mo on mo.menuOptIdx=oc.optIdx
+where oc.isDeleted='N' and oc.menuIdx=? and oc.userIdx=? ;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$menuIdx,$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function getMenuPrice($menuIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select menuPrice from Menu where isDeleted='N' and menuIdx=?;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$menuIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchColumn();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function getMenuOptionPrice($optIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+    select optPrice from MenuOption where isDeleted='N' and menuOptIdx=?;
+";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$optIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchColumn();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function getDeliveryFee($userIdxInToken)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select distinct
+(select deliveryFee from Store as s where s.storeIdx=c.storeIdx ) as storeName
+from Cart as c
+where c.isDeleted='N' and c.userIdx=?;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchColumn();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function getCoupon($userIdxInToken)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select salePrice
+from Coupon
+where couponIdx=(select sc.couponIdx
+                    from StoreCoupon as sc
+                    join UserCoupon uc on sc.couponIdx = uc.couponIdx
+                    where sc.storeIdx=(select distinct
+                                        (select storeIdx from Store as s where s.storeIdx=c.storeIdx ) as storeName
+                                        from Cart as c
+                                        where c.isDeleted='N' and c.userIdx=?)
+                          and uc.userIdx=?) and isDeleted='N';";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdxInToken,$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchColumn();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function getPayment($userIdxInToken)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select paymentIdx,CASE
+           WHEN CHAR_LENGTH(cardName) > 13
+               THEN concat(LEFT(cardName, 13), '...', '****',substring(cardNumber,13,3),'*')
+           ELSE concat(cardName, '****',substring(cardNumber,13,3),'*')
+       END AS paymentMethod
+from PaymentMethod
+where isDeleted='N' and userIdx=?
+order by createdAt desc limit 1;
+";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res[0]; // 결과 0인것하나
+}
+
+function getCart($userIdxInToken)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select storeIdx,menuIdx,quantity
+from Cart
+where isDeleted='N' and userIdx=?;
+";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res; //결과 전체
+}
+
+function getCartOption($userIdxInToken)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select menuIdx,optIdx
+from OptionCart
+where isDeleted='N' and userIdx=?;
+";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res; //결과 전체
+}
+function addOrderInfo($storeIdx,$userIdxInToken,$paymentIdx,$totalPrice,$toStore,$noPlastic,$deliveryReqIdx,$orderState,
+                      $orderMenu,$orderMenuOption)
+{
+    $pdo = pdoSqlConnect();
+
+    // 여기부터
+    $qurtyOrderInfo="
+insert into OrderInfo (storeIdx,userIdx,paymentIdx,orderPrice,toStore,noPlastic,deliveryReqIdx,orderState)
+values(?,?,?,?,?,if(isnull(?),'N',?),?,?);";
+    $queryOrderMenu="insert into OrderDetail (orderIdx,menuIdx,quantity) values(?,?,?);";
+    $queryOrderMenuOption="insert into OrderOptionDetail (orderIdx,menuIdx,menuOptIdx) values(?,?,?);";
+    $querydeleteCart="update Cart set isDeleted='Y' where userIdx=? and isDeleted='N';";
+    $querydeleteCartOption="update OptionCart set isDeleted='Y' where userIdx=? and isDeleted='N';";
+
+
+    try {
+
+        $st1 = $pdo->prepare($qurtyOrderInfo);
+        $st2 = $pdo->prepare($queryOrderMenu);
+        $st3 = $pdo->prepare($queryOrderMenuOption);
+        $st4 = $pdo->prepare($querydeleteCart);
+        $st5 = $pdo->prepare($querydeleteCartOption);
+        $pdo->beginTransaction();
+
+        $st1->execute([$storeIdx,$userIdxInToken,$paymentIdx,$totalPrice,
+                        $toStore,$noPlastic,$noPlastic,$deliveryReqIdx,$orderState]);
+        $orderIdx = $pdo->lastInsertId();
+//삭제
+        $i=0;
+        while(count($orderMenu)>$i){
+            $st2->execute([$orderIdx, $orderMenu[$i]['menuIdx'], $orderMenu[$i]['quantity']]);
+            $i++;
+        }
+        $st4->execute([$userIdxInToken]);
+        if(!empty($orderMenuOption)){
+            $j=0;
+            while(count($orderMenuOption)>$j){
+                $st3->execute([$orderIdx, $orderMenuOption[$j]['menuIdx'], $orderMenuOption[$j]['optIdx']]);
+                $j++;
+            }
+            $st5->execute([$userIdxInToken]);
+        }
+
+
+
+
+
+        $pdo->commit();
+    }
+    catch (PDOException $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollback();
+            // If we got here our two data updates are not in the database
+        }
+        //throw $e;
+        return $e->getMessage();
+    }
+
+    $st1 = null;
+    $st2 = null;
+    $st3 = null;
+    $st4 = null;
+    $st5 = null;
+    $pdo = null;
+    return $orderIdx;
+
+}

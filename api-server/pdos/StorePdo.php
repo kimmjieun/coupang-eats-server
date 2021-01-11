@@ -246,42 +246,42 @@ function getOpenStore($userIdxInToken)
 
     return $res;
 }
-
-function getStore()
-{
-    $pdo = pdoSqlConnect();
-    $query = "
-        select s.storeIdx,s.storeName, s.storeStar,
-               (select count(*) from Review as r  where s.storeIdx=r.storeIdx and isDeleted='N') as reviewCount,
-               concat('배달비 ',cast(FORMAT(s.deliveryFee, 0) as char), '원') as deliveryFee,
-               s.deliveryTime,
-               case
-                   when exists(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       then (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       else '-1'
-               end as coupon,
-                concat(ROUND((6371 *acos(cos(radians(37.3343011791693)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(126.86714856212525))
-                    + sin(radians(37.3343011791693)) * sin(radians(s.latitude)))) ,1),'km') as distance
-        from Store as s
-        where s.isDeleted='N';";
-
-    $st = $pdo->prepare($query);
-    //    $st->execute([$param,$param]);
-    $st->execute([]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
+//
+//function getStore()
+//{
+//    $pdo = pdoSqlConnect();
+//    $query = "
+//        select s.storeIdx,s.storeName, s.storeStar,
+//               (select count(*) from Review as r  where s.storeIdx=r.storeIdx and isDeleted='N') as reviewCount,
+//               concat('배달비 ',cast(FORMAT(s.deliveryFee, 0) as char), '원') as deliveryFee,
+//               s.deliveryTime,
+//               case
+//                   when exists(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+//                                from Coupon as c
+//                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+//                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
+//                       then (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+//                                from Coupon as c
+//                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+//                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
+//                       else '-1'
+//               end as coupon,
+//                concat(ROUND((6371 *acos(cos(radians(37.3343011791693)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(126.86714856212525))
+//                    + sin(radians(37.3343011791693)) * sin(radians(s.latitude)))) ,1),'km') as distance
+//        from Store as s
+//        where s.isDeleted='N';";
+//
+//    $st = $pdo->prepare($query);
+//    //    $st->execute([$param,$param]);
+//    $st->execute([]);
+//    $st->setFetchMode(PDO::FETCH_ASSOC);
+//    $res = $st->fetchAll();
+//
+//    $st = null;
+//    $pdo = null;
+//
+//    return $res;
+//}
 
 function test($mincost)
 {
@@ -1734,21 +1734,23 @@ function isValidPromotion($promotionIdx)
     return intval($res[0]['exist']);
 }
 
-function getStoreIdx($menuIdx)
-{
-    $pdo = pdoSqlConnect();
-    $query = "select storeIdx from Menu where isDeleted='N'and menuIdx=?;";
-
-    $st = $pdo->prepare($query);
-    $st->execute([$menuIdx]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchColumn();
-
-    $st = null;
-    $pdo = null;
 
 
-    return $res;
-}
 
-
+//function getStoreIntroduce($storeIdx)
+//{
+//    $pdo = pdoSqlConnect();
+//    $query = "select storeName, telephoneNumber,address, representation, corporateNumber,businessName, officeHour,
+//       storeIntroduce, originInfo,nutrientInfo,allergyInfo from Store where isDeleted='N' and storeIdx=?;";
+//
+//    $st = $pdo->prepare($query);
+//    //    $st->execute([$param,$param]);
+//    $st->execute([$storeIdx]);
+//    $st->setFetchMode(PDO::FETCH_ASSOC);
+//    $res = $st->fetchAll();
+//
+//    $st = null;
+//    $pdo = null;
+//
+//    return $res;
+//}

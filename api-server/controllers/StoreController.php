@@ -1259,6 +1259,24 @@ try {
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
+//        case "getStoreIntroduce":
+//            http_response_code(200);
+//            echo 'dsa';
+//            break;
+//            if(!isValidStore($vars['storeIdx'])){
+//                $res->isSuccess = FALSE;
+//                $res->code = 1000;
+//                $res->message = "유효하지않은 매장입니다.";
+//                echo json_encode($res, JSON_NUMERIC_CHECK);
+//                break;
+//            }
+//            $res->result = getStoreIntroduce($vars['storeIdx']);
+//            $res->isSuccess = TRUE;
+//            $res->code = 1000;
+//            $res->message = "매장/원산지정보 조회 성공";
+//            echo json_encode($res, JSON_NUMERIC_CHECK);
+//            break;
+
 //        case "receiveCoupon":
 //            http_response_code(200);
 ////            $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
