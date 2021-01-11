@@ -37,22 +37,22 @@ function getUserDetail($userIdx)
 }
 
 //READ
-function isValidUserIdx($userIdx)
-{
-    $pdo = pdoSqlConnect();
-    $query = "select EXISTS(select * from Users where userIdx = ?) exist;";
-
-    $st = $pdo->prepare($query);
-    $st->execute([$userIdx]);
-    //    $st->execute();
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res[0]['exist'];
-}
+//function isValidUserIdx($userIdx)
+//{
+//    $pdo = pdoSqlConnect();
+//    $query = "select EXISTS(select * from Users where userIdx = ?) exist;";
+//
+//    $st = $pdo->prepare($query);
+//    $st->execute([$userIdx]);
+//    //    $st->execute();
+//    $st->setFetchMode(PDO::FETCH_ASSOC);
+//    $res = $st->fetchAll();
+//
+//    $st = null;
+//    $pdo = null;
+//
+//    return $res[0]['exist'];
+//}
 
 
 function createUser($name)

@@ -1,5 +1,22 @@
 <?php
 
+function introduceStore($storeIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "select storeName, telephoneNumber,address,latitude,longitude, representation, corporateNumber,businessName, officeHour,
+       storeIntroduce,notice, originInfo,nutrientInfo,allergyInfo from Store where isDeleted='N' and storeIdx=?;";
+
+    $st = $pdo->prepare($query);
+    //    $st->execute([$param,$param]);
+    $st->execute([$storeIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
 
 function getPromotion()
 {
@@ -1378,7 +1395,8 @@ function getStoreInfo($storeIdx)
                 from Review
                 where storeIdx=?
                 group by storeIdx) as storeStar,
-               (select count(*) from Review as r  where s.storeIdx=r.storeIdx and isDeleted='N') as reviewCount
+               (select count(*) from Review as r  where s.storeIdx=r.storeIdx and isDeleted='N') as reviewCount,
+               s.isCheetah
         from Store as s
         where s.storeIdx=? and s.isDeleted='N';";
     $st = $pdo->prepare($query);
@@ -1545,7 +1563,7 @@ function getMenuCategory($storeIdx,$catIdx)
     $query = "
         select menuIdx, menuname, menuDetail,
                concat(cast(FORMAT(menuPrice, 0) as char), '원') as menuPrice,
-               menuThumbnail
+               menuThumbnail,isBestReview,isBestOrder
         from Menu
         where storeIdx=? and menuCatIdx =? and isDeleted='N' ;";
     $st = $pdo->prepare($query);
@@ -1735,22 +1753,23 @@ function isValidPromotion($promotionIdx)
 }
 
 
+function getCouponInfo($storeIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select couponIdx, salePrice
+from Coupon
+where couponIdx = (select couponIdx from StoreCoupon where isDeleted='N' and storeIdx=?);
+    ";
 
+    $st = $pdo->prepare($query);
+    $st->execute([$storeIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+    $st = null;
+    $pdo = null;
 
-//function getStoreIntroduce($storeIdx)
-//{
-//    $pdo = pdoSqlConnect();
-//    $query = "select storeName, telephoneNumber,address, representation, corporateNumber,businessName, officeHour,
-//       storeIntroduce, originInfo,nutrientInfo,allergyInfo from Store where isDeleted='N' and storeIdx=?;";
-//
-//    $st = $pdo->prepare($query);
-//    //    $st->execute([$param,$param]);
-//    $st->execute([$storeIdx]);
-//    $st->setFetchMode(PDO::FETCH_ASSOC);
-//    $res = $st->fetchAll();
-//
-//    $st = null;
-//    $pdo = null;
-//
-//    return $res;
-//}
+    return $res[0]; // 배열에 첫번쨰원소만
+
+}
+

@@ -7,6 +7,7 @@ require './pdos/StorePdo.php';
 require './pdos/AddressPdo.php';
 require './pdos/CartPdo.php';
 require './pdos/PayPdo.php';
+require './pdos/CouponPdo.php';
 require './vendor/autoload.php';
 
 
@@ -34,7 +35,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     /* ********************************* Store ********************************* */
   //  $r->addRoute('GET', '/stores', ['StoreController', 'getStore']);
     // 홈화면조회
-    //$r->addRoute('GET', '/home', ['StoreController', 'getHome']);
+//    $r->addRoute('GET', '/home3', ['StoreController', 'getHome3']);
     // 홈화면조회
     $r->addRoute('GET', '/home', ['StoreController', 'getHome2']);
     // 골라먹는맛집 세부 조회
@@ -54,10 +55,10 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('GET', '/promotions/{promotionIdx}', ['StoreController', 'getPromotionDetail']);
     // 카테고리 조회 API
     $r->addRoute('GET', '/category', ['StoreController', 'getCategory']);
+
+
     // 매장/원산지 정보조회 API
-//    $r->addRoute('POST', '/stores/{storeIdx}/intro', ['StoreController', 'getStoreIntroduce']);
-    // 쿠폰받기 API
-    $r->addRoute('POST', '/stores/{storeIdx}/coupon', ['StoreController', 'receiveCoupon']);
+    $r->addRoute('GET', '/stores/{storeIdx}/info', ['StoreController', 'introduceStore']);
 
     /* ********************************* jwt ********************************* */
     $r->addRoute('POST', '/kakao-login', ['JWTController', 'createKakaoJwt']); // 바디
@@ -79,8 +80,14 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     // 주문하기
     $r->addRoute('POST', '/order', ['CartController', 'getOrder']);
 
+
     /* ********************************* pay ********************************* */
     $r->addRoute('GET', '/payment', ['PayController', 'pay']);
+    /* ********************************* coupon ********************************* */
+    // 쿠폰받기 API
+    $r->addRoute('POST', '/stores/{storeIdx}/coupon', ['CouponController', 'receiveCoupon']);
+    // 쿠폰조회 API
+    $r->addRoute('GET', '/coupons/{userIdx}', ['CouponController', 'getUserCoupon']);
 
 //    $r->addRoute('GET', '/users', 'get_all_users_handler');
 //    // {id} must be a number (\d+)
@@ -157,6 +164,11 @@ switch ($routeInfo[0]) {
                 $handler = $routeInfo[1][1];
                 $vars = $routeInfo[2];
                 require './controllers/PayController.php';
+                break;
+            case 'CouponController':
+                $handler = $routeInfo[1][1];
+                $vars = $routeInfo[2];
+                require './controllers/CouponController.php';
                 break;
         }
 
