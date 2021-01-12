@@ -256,23 +256,30 @@ where isDeleted='N' and userIdx=?;";
 }
 
 
+// 4개 코드
 
-
-function getOrderByNew1($cheetah,$mincost,$userIdxInToken)
+// 추천순 회/비
+function getOrderByRecommend1($cheetah,$mincost)
 {
     $pdo = pdoSqlConnect();
-    $query = "select s.storeIdx,s.createdAt,
-       (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) as distance
-from Store as s, UserInfo as us
+    $query = "
+select s.storeIdx,s.deliveryFee,
+       (select sum(storeIdx)
+        from OrderInfo as oi
+        where isDeleted='N' and oi.storeIdx=s.storeIdx
+        group by storeIdx) as orderCount
+from Store as s
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx) and us.isDeleted='N' and us.userIdx=?
-order by s.createdAt DESC;
+      and EXISTS(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
+order by s.deliveryFee asc,orderCount desc;
 ";
 
     $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$userIdxInToken]);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -282,22 +289,245 @@ order by s.createdAt DESC;
     return $res;
 }
 
-function getOrderByNew2($cheetah,$deliveryfee,$mincost,$userIdxInToken)
+function getOrderByRecommend2($cheetah,$deliveryfee,$mincost)
 {
     $pdo = pdoSqlConnect();
     $query = "
-select s.storeIdx,s.createdAt,
-       (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) as distance
-from Store as s, UserInfo as us
+select s.storeIdx,s.deliveryFee,
+       (select sum(storeIdx)
+        from OrderInfo as oi
+        where isDeleted='N' and oi.storeIdx=s.storeIdx
+        group by storeIdx) as orderCount
+from Store as s
+where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?)
+      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
+      and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
+      and EXISTS(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
+order by s.deliveryFee asc,orderCount desc;
+";
+    $st = $pdo->prepare($query);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+function getOrderByRecommend3($cheetah,$mincost)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select s.storeIdx,s.deliveryFee,
+       (select sum(storeIdx)
+        from OrderInfo as oi
+        where isDeleted='N' and oi.storeIdx=s.storeIdx
+        group by storeIdx) as orderCount
+from Store as s
+where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
+      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
+order by s.deliveryFee asc,orderCount desc;
+";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+
+function getOrderByRecommend4($cheetah,$deliveryfee,$mincost)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select s.storeIdx,s.deliveryFee,
+       (select sum(storeIdx)
+        from OrderInfo as oi
+        where isDeleted='N' and oi.storeIdx=s.storeIdx
+        group by storeIdx) as orderCount
+from Store as s
+where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
+      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
+      and s.deliveryFee<=if(isnull(?),s.deliveryFee,?)
+order by s.deliveryFee asc,orderCount desc;
+";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+
+// 주문많은순 회/비
+function getOrderByMany1($cheetah,$mincost)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select s.storeIdx,
+       (select sum(storeIdx)
+        from OrderInfo as oi
+        where isDeleted='N' and oi.storeIdx=s.storeIdx
+        group by storeIdx) as orderCount
+from Store as s
+where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
+      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
+      and EXISTS(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
+order by orderCount desc;
+";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+
+function getOrderByMany2($cheetah,$deliveryfee,$mincost)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select s.storeIdx,
+       (select sum(storeIdx)
+        from OrderInfo as oi
+        where isDeleted='N' and oi.storeIdx=s.storeIdx
+        group by storeIdx) as orderCount
+from Store as s
+where s.isDeleted='N'and s.isCheetah=if(isnull(?),s.isCheetah,?)
+      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
+      and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
+      and EXISTS(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
+order by orderCount desc;
+
+";
+    $st = $pdo->prepare($query);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+function getOrderByMany3($cheetah,$mincost)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select s.storeIdx,
+       (select sum(storeIdx)
+        from OrderInfo as oi
+        where isDeleted='N' and oi.storeIdx=s.storeIdx
+        group by storeIdx) as orderCount
+from Store as s
+where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?)
+        and s.deliveryFee =-1
+      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
+order by orderCount desc;
+";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+
+function getOrderByMany4($cheetah,$deliveryfee,$mincost)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select s.storeIdx,
+       (select sum(storeIdx)
+        from OrderInfo as oi
+        where isDeleted='N' and oi.storeIdx=s.storeIdx
+        group by storeIdx) as orderCount
+from Store as s
+where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
+      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
+      and s.deliveryFee<=if(isnull(?),s.deliveryFee,?)
+order by orderCount desc;
+";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+function getOrderByNew1($cheetah,$mincost)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select s.storeIdx,s.createdAt
+from Store as s
+where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
+      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
+      and EXISTS(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
+order by s.createdAt DESC;
+";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+
+function getOrderByNew2($cheetah,$deliveryfee,$mincost)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select s.storeIdx,s.createdAt
+from Store as s
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
-      and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx) and us.isDeleted='N' and us.userIdx=?
+      and EXISTS(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
 order by s.createdAt DESC;
 ";
     $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee,$userIdxInToken]);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -306,74 +536,19 @@ order by s.createdAt DESC;
 
     return $res;
 }
-function getOrderByNew3($cheetah,$mincost,$userIdxInToken)
+function getOrderByNew3($cheetah,$mincost)
 {
     $pdo = pdoSqlConnect();
     $query = "
-select s.storeIdx,s.createdAt,
-       (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) as distance
-from Store as s, UserInfo as us
-where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
-      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?) and us.isDeleted='N' and us.userIdx=?
-order by s.createdAt DESC;
-";
-
-    $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$userIdxInToken]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
-
-function getOrderByNew4($cheetah,$deliveryfee,$mincost,$userIdxInToken)
-{
-    $pdo = pdoSqlConnect();
-    $query = "
-select s.storeIdx,s.createdAt,
-       (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) as distance
-from Store as s, UserInfo as us
-where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
-      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and s.deliveryFee=if(isnull(?),s.deliveryFee,?) and us.isDeleted='N' and us.userIdx=?
-order by s.createdAt DESC;
-";
-
-    $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee,$userIdxInToken]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
-function getOrderByStar1($cheetah,$mincost,$userIdxInToken)
-{
-    $pdo = pdoSqlConnect();
-    $query = "
-select s.storeIdx,
-        (select ROUND(avg(reviewStar),1) as avg
-        from Review as r
-        where r.storeIdx=s.storeIdx
-        group by storeIdx) as storeStar,
-       (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) as distance
-from Store as s, UserInfo as us
+select s.storeIdx,s.createdAt
+from Store as s
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx) and us.isDeleted='N' and us.userIdx=?
-order by storeStar DESC;
+order by s.createdAt DESC;
 ";
 
     $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$userIdxInToken]);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -383,27 +558,20 @@ order by storeStar DESC;
     return $res;
 }
 
-function getOrderByStar2($cheetah,$deliveryfee,$mincost,$userIdxInToken)
+function getOrderByNew4($cheetah,$deliveryfee,$mincost)
 {
     $pdo = pdoSqlConnect();
     $query = "
-select s.storeIdx,
-        (select ROUND(avg(reviewStar),1) as avg
-        from Review as r
-        where r.storeIdx=s.storeIdx
-        group by storeIdx) as storeStar,
-       (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) as distance
-from Store as s, UserInfo as us
+select s.storeIdx,s.createdAt
+from Store as s
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
-      and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx) and us.isDeleted='N' and us.userIdx=?
-order by storeStar DESC;
-
+order by s.createdAt DESC;
 ";
+
     $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee,$userIdxInToken]);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -412,7 +580,7 @@ order by storeStar DESC;
 
     return $res;
 }
-function getOrderByStar3($cheetah,$mincost,$userIdxInToken)
+function getOrderByStar1($cheetah,$mincost)
 {
     $pdo = pdoSqlConnect();
     $query = "
@@ -420,19 +588,75 @@ select s.storeIdx,
         (select ROUND(avg(reviewStar),1) as avg
         from Review as r
         where r.storeIdx=s.storeIdx
-        group by storeIdx) as storeStar,
-       (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) as distance
-from Store as s, UserInfo as us
+        group by storeIdx) as storeStar
+from Store as s
+where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
+      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
+      and EXISTS(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now()))) 
+order by storeStar DESC;
+";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+
+function getOrderByStar2($cheetah,$deliveryfee,$mincost)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select s.storeIdx,
+        (select ROUND(avg(reviewStar),1) as avg
+        from Review as r
+        where r.storeIdx=s.storeIdx
+        group by storeIdx) as storeStar
+from Store as s
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
-      and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx) and us.isDeleted='N' and us.userIdx=?
+      and EXISTS(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now()))) 
+order by storeStar DESC;
+
+";
+    $st = $pdo->prepare($query);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return $res;
+}
+function getOrderByStar3($cheetah,$mincost)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select s.storeIdx,
+        (select ROUND(avg(reviewStar),1) as avg
+        from Review as r
+        where r.storeIdx=s.storeIdx
+        group by storeIdx) as storeStar
+from Store as s
+where s.isDeleted='N'and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
+      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
 order by storeStar DESC;
 ";
 
     $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$userIdxInToken]);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -442,7 +666,7 @@ order by storeStar DESC;
     return $res;
 }
 
-function getOrderByStar4($cheetah,$deliveryfee,$mincost,$userIdxInToken)
+function getOrderByStar4($cheetah,$deliveryfee,$mincost)
 {
     $pdo = pdoSqlConnect();
     $query = "
@@ -450,18 +674,16 @@ select s.storeIdx,
         (select ROUND(avg(reviewStar),1) as avg
         from Review as r
         where r.storeIdx=s.storeIdx
-        group by storeIdx) as storeStar,
-       (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) as distance
-from Store as s, UserInfo as us
+        group by storeIdx) as storeStar
+from Store as s
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and s.deliveryFee<=if(isnull(?),s.deliveryFee,?) and us.isDeleted='N' and us.userIdx=?
+      and s.deliveryFee<=if(isnull(?),s.deliveryFee,?) 
 order by storeStar DESC;
 ";
 
     $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee,$userIdxInToken]);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -484,7 +706,10 @@ select s.storeIdx,
 from Store as s, UserInfo as us
 where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx) and us.isDeleted='N' and us.userIdx=?
+      and EXISTS(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now()))) and us.isDeleted='N' and us.userIdx=?
 order by (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
     + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ;
 ";
@@ -515,7 +740,10 @@ from Store as s, UserInfo as us
 where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
-      and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx) and us.isDeleted='N' and us.userIdx=?
+      and EXISTS(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now()))) and us.isDeleted='N' and us.userIdx=?
 order by (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
     + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ;
 
@@ -542,8 +770,10 @@ select s.storeIdx,
        (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
     + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) as distance
 from Store as s, UserInfo as us
-where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
-      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?) and us.isDeleted='N' and us.userIdx=?
+where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?) 
+        and s.deliveryFee =-1
+      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?) 
+        and us.isDeleted='N' and us.userIdx=?
 order by (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
     + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ;
 
@@ -675,203 +905,6 @@ function getOrderByOneNo($storeIdx,$latitude,$longitude)
 }
 
 
-// 회원 아닐때
-function getOrderByNew1No($cheetah,$mincost)
-{
-    $pdo = pdoSqlConnect();
-    $query = "
-    select s.storeIdx,s.createdAt
-from Store as s
-where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
-      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx)
-order by s.createdAt DESC;
-";
-
-    $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
-
-function getOrderByNew2No($cheetah,$deliveryfee,$mincost)
-{
-    $pdo = pdoSqlConnect();
-    $query = "
-select s.storeIdx,s.createdAt
-from Store as s
-where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
-      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
-      and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx)
-order by s.createdAt DESC;
-";
-    $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
-function getOrderByNew3No($cheetah,$mincost)
-{
-    $pdo = pdoSqlConnect();
-    $query = "
-select s.storeIdx,s.createdAt
-from Store as s
-where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
-      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-order by s.createdAt DESC;
-";
-
-    $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
-
-function getOrderByNew4No($cheetah,$deliveryfee,$mincost)
-{
-    $pdo = pdoSqlConnect();
-    $query = "
-select s.storeIdx,s.createdAt
-from Store as s
-where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
-      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
-order by s.createdAt DESC;
-";
-
-    $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
-function getOrderByStar1No($cheetah,$mincost)
-{
-    $pdo = pdoSqlConnect();
-    $query = "
-select s.storeIdx,
-        (select ROUND(avg(reviewStar),1) as avg
-        from Review as r
-        where r.storeIdx=s.storeIdx
-        group by storeIdx) as storeStar
-from Store as s
-where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
-      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx)
-order by storeStar DESC;
-";
-
-    $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
-
-function getOrderByStar2No($cheetah,$deliveryfee,$mincost)
-{
-    $pdo = pdoSqlConnect();
-    $query = "
-select s.storeIdx,
-        (select ROUND(avg(reviewStar),1) as avg
-        from Review as r
-        where r.storeIdx=s.storeIdx
-        group by storeIdx) as storeStar
-from Store as s
-where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
-      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
-      and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx)
-order by storeStar DESC;
-
-";
-    $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
-function getOrderByStar3No($cheetah,$mincost)
-{
-    $pdo = pdoSqlConnect();
-    $query = "
-select s.storeIdx,
-        (select ROUND(avg(reviewStar),1) as avg
-        from Review as r
-        where r.storeIdx=s.storeIdx
-        group by storeIdx) as storeStar
-from Store as s
-where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
-      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-order by storeStar DESC;
-
-";
-
-    $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
-
-function getOrderByStar4No($cheetah,$deliveryfee,$mincost)
-{
-    $pdo = pdoSqlConnect();
-    $query = "
-select s.storeIdx,
-        (select ROUND(avg(reviewStar),1) as avg
-        from Review as r
-        where r.storeIdx=s.storeIdx
-        group by storeIdx) as storeStar
-from Store as s
-where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
-      and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and s.deliveryFee<=if(isnull(?),s.deliveryFee,?)
-order by storeStar DESC;
-";
-
-    $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res;
-}
 function getOrderByNear1No($cheetah,$mincost,$latitude,$longitude)
 {
     $pdo = pdoSqlConnect();
@@ -882,7 +915,10 @@ select s.storeIdx,
 from Store as s
 where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx)
+      and EXISTS(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
 order by (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
     + sin(radians(?)) * sin(radians(s.latitude)))) ;
 ";
@@ -909,7 +945,10 @@ from Store as s
 where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
-      and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx)
+      and EXISTS(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
 order by (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
     + sin(radians(?)) * sin(radians(s.latitude)))) ;
 ";

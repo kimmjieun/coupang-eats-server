@@ -54,6 +54,10 @@ try {
             $deliveryfee = $_GET['deliveryfee'];
             $mincost = $_GET['mincost'];
             $coupon = $_GET['coupon'];
+//            $keyword = $_GET['keyword'];
+//            if(empty($keyword)){
+//                $keyword='';
+//            }
             if (empty($jwt)){
 //                $latitude = $_GET['latitude'];
 //                $longitude = $_GET['longitude'];
@@ -131,20 +135,7 @@ try {
 
                 }
 
-                if ($cheetah != 'Y' and !empty($cheetah)) { //널 도가능
-                    $res->isSuccess = FALSE;
-                    $res->code = 2005;
-                    $res->message = "치타 Y만 입력가능 ";
-                    echo json_encode($res, JSON_NUMERIC_CHECK);
-                    break;
-                }
-                if ($coupon != 'Y' and !empty($cheetah)) { //널 도가능
-                    $res->isSuccess = FALSE;
-                    $res->code = 2006;
-                    $res->message = "쿠폰 Y만 입력가능 ";
-                    echo json_encode($res, JSON_NUMERIC_CHECK);
-                    break;
-                }
+
 
                 $mincostList = [5000, 10000, 12000, 15000];
                 if (!in_array($mincost, $mincostList) and !empty($mincost)) {
@@ -174,29 +165,19 @@ try {
 //            echo '성공';
 //            break;
                 //4개 한번에 넣어서 할수있게
-                if (empty($sort)){
-                    $res->isSuccess = FALSE;
-                    $res->code = 2100;
-                    $res->message = "정렬인덱스를 입력하세요";
-                    echo json_encode($res, JSON_NUMERIC_CHECK);
-                    break;
-                }
-                if ($sort==1) { // 신규매장순
-//                    echo 'notsort';
 
+                if (empty($sort)|$sort==1) { // 추천순
                     if ($coupon = 'Y' && !empty($coupon)) {
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByNew1';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNew1No($cheetah, $mincost);
+                            $queryResult = getOrderByRecommend1($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
                         } else {
-//                        echo 'getOrderByNew2';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNew2No($cheetah, $deliveryfee, $mincost);
+                            $queryResult = getOrderByRecommend2($cheetah, $deliveryfee, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -206,62 +187,15 @@ try {
                     } else {
 
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByNew3';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNew3No($cheetah, $mincost);
+                            $queryResult = getOrderByRecommend3($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
                         } else {
-//                        echo 'getOrderByNew4';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNew4No($cheetah, $deliveryfee, $mincost);
-                            $s = 0;
-                            while ($s < count($queryResult)) {
-//                                echo $queryResult[$s++]['storeIdx'];
-                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
-                            }
-//                            break;
-                        }
-
-                    }
-
-                } else if ($sort == 5) { //신규매장순
-//                echo 'sort1신규매장순 ';
-                    if ($coupon = 'Y' && !empty($coupon)) {
-                        if ($deliveryfee == -1) {
-//                        echo 'getOrderByNew1';
-                            $storeIdxList = array();
-                            $queryResult = getOrderByNew1No($cheetah, $mincost);
-                            $s = 0;
-                            while ($s < count($queryResult)) {
-                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
-                            }
-                        } else {
-//                        echo 'getOrderByNew2';
-                            $storeIdxList = array();
-                            $queryResult = getOrderByNew2No($cheetah, $deliveryfee, $mincost);
-                            $s = 0;
-                            while ($s < count($queryResult)) {
-                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
-                            }
-
-                        }
-                    } else {
-
-                        if ($deliveryfee == -1) {
-//                        echo 'getOrderByNew3';
-                            $storeIdxList = array();
-                            $queryResult = getOrderByNew3No($cheetah, $mincost);
-                            $s = 0;
-                            while ($s < count($queryResult)) {
-                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
-                            }
-                        } else {
-//                        echo 'getOrderByNew4';
-                            $storeIdxList = array();
-                            $queryResult = getOrderByNew4No($cheetah, $deliveryfee,$mincost);
+                            $queryResult = getOrderByRecommend4($cheetah, $deliveryfee, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -269,22 +203,20 @@ try {
                         }
 
                     }
-                } else if ($sort == 2) { //별점높은순
-//                echo '별점높은순 ';
+
+                } else if ($sort == 2) { //주문많은순
+
                     if ($coupon = 'Y' && !empty($coupon)) {
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByStar1';
                             $storeIdxList = array();
-                            $queryResult = getOrderByStar1No($cheetah, $mincost);
+                            $queryResult = getOrderByMany1($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
-                        } //if(empty($deliveryfee)|$deliveryfee==1000 |$deliveryfee==2000| $deliveryfee==3000){
-                        else {
-//                        echo 'getOrderByStar2';
+                        } else {
                             $storeIdxList = array();
-                            $queryResult = getOrderByStar2No($cheetah, $deliveryfee);
+                            $queryResult = getOrderByMany2($cheetah, $deliveryfee, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -294,17 +226,15 @@ try {
                     } else {
 
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByStar3';
                             $storeIdxList = array();
-                            $queryResult = getOrderByStar3No($cheetah, $mincost);
+                            $queryResult = getOrderByMany3($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
                         } else {
-//                        echo 'getOrderByStar4';
                             $storeIdxList = array();
-                            $queryResult = getOrderByStar4No($cheetah, $deliveryfee, $mincost);
+                            $queryResult = getOrderByMany4($cheetah, $deliveryfee, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -313,20 +243,55 @@ try {
 
                     }
                 } else if ($sort == 3) { //가까운순
-//                echo '33가까운순 ';
+                        if ($coupon = 'Y' && !empty($coupon)) {
+                            if ($deliveryfee == -1) {
+                                $storeIdxList = array();
+                                $queryResult = getOrderByNear1No($cheetah, $mincost,$latitude,$longitude);
+                                $s = 0;
+                                while ($s < count($queryResult)) {
+                                    array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                                }
+                            } else {
+                                $storeIdxList = array();
+                                $queryResult = getOrderByNear2No($cheetah, $deliveryfee, $mincost,$latitude,$longitude);
+                                $s = 0;
+                                while ($s < count($queryResult)) {
+                                    array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                                }
+
+                            }
+                        } else {
+
+                            if ($deliveryfee == -1) {
+                                $storeIdxList = array();
+                                $queryResult = getOrderByNear3No($cheetah, $mincost,$latitude,$longitude);
+                                $s = 0;
+                                while ($s < count($queryResult)) {
+                                    array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                                }
+                            } else {
+                                $storeIdxList = array();
+                                $queryResult = getOrderByNear4No($cheetah, $deliveryfee, $mincost,$latitude,$longitude);
+                                $s = 0;
+                                while ($s < count($queryResult)) {
+                                    array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                                }
+                            }
+
+                        }
+                } else if ($sort == 4) { //별점높은순
                     if ($coupon = 'Y' && !empty($coupon)) {
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByNear1';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNear1No($cheetah, $mincost,$latitude,$longitude);
+                            $queryResult = getOrderByStar1($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
-                        } else {
-//                        echo 'getOrderByNear2';
+                        } //if(empty($deliveryfee)|$deliveryfee==1000 |$deliveryfee==2000| $deliveryfee==3000){
+                        else {
                             $storeIdxList = array();
-                            $queryResult = getOrderByNear2No($cheetah, $deliveryfee, $mincost,$latitude,$longitude);
+                            $queryResult = getOrderByStar2($cheetah, $deliveryfee);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -336,17 +301,15 @@ try {
                     } else {
 
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByStar3';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNear3No($cheetah, $mincost,$latitude,$longitude);
+                            $queryResult = getOrderByStar3($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
                         } else {
-//                        echo 'getOrderByStar4';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNear4No($cheetah, $deliveryfee, $mincost,$latitude,$longitude);
+                            $queryResult = getOrderByStar4($cheetah, $deliveryfee, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -354,20 +317,19 @@ try {
                         }
 
                     }
-                }else if ($sort == 4) { //주문많은순
+
+                }else if ($sort == 5) { //신규매장순
                     if ($coupon = 'Y' && !empty($coupon)) {
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByNear1';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNear1No($cheetah, $mincost,$latitude,$longitude);
+                            $queryResult = getOrderByNew1($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
                         } else {
-//                        echo 'getOrderByNear2';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNear2No($cheetah, $deliveryfee, $mincost,$latitude,$longitude);
+                            $queryResult = getOrderByNew2($cheetah, $deliveryfee, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -377,17 +339,15 @@ try {
                     } else {
 
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByStar3';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNear3No($cheetah, $mincost,$latitude,$longitude);
+                            $queryResult = getOrderByNew3($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
                         } else {
-//                        echo 'getOrderByStar4';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNear4No($cheetah, $deliveryfee, $mincost,$latitude,$longitude);
+                            $queryResult = getOrderByNew4($cheetah, $deliveryfee,$mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -438,11 +398,6 @@ try {
                     break;
                 }
 
-                $sort = $_GET['sort'];
-                $cheetah = $_GET['cheetah'];
-                $deliveryfee = $_GET['deliveryfee'];
-                $mincost = $_GET['mincost'];
-                $coupon = $_GET['coupon'];
 
                 if (is_string($sort)) {
                     if (!empty((int)$sort)) {
@@ -504,20 +459,7 @@ try {
 
                 }
 
-                if ($cheetah != 'Y' and !empty($cheetah)) { //널 도가능
-                    $res->isSuccess = FALSE;
-                    $res->code = 2005;
-                    $res->message = "치타 Y만 입력가능 ";
-                    echo json_encode($res, JSON_NUMERIC_CHECK);
-                    break;
-                }
-                if ($coupon != 'Y' and !empty($cheetah)) { //널 도가능
-                    $res->isSuccess = FALSE;
-                    $res->code = 2006;
-                    $res->message = "쿠폰 Y만 입력가능 ";
-                    echo json_encode($res, JSON_NUMERIC_CHECK);
-                    break;
-                }
+
 
                 $mincostList = [5000, 10000, 12000, 15000];
                 if (!in_array($mincost, $mincostList) and !empty($mincost)) {
@@ -544,33 +486,20 @@ try {
                     echo json_encode($res, JSON_NUMERIC_CHECK);
                     break;
                 }
-//            echo '성공';
-//            break;
-                //4개 한번에 넣어서 할수있게
-                if (empty($sort)){
-                    $res->isSuccess = FALSE;
-                    $res->code = 2100;
-                    $res->message = "정렬인덱스를 입력하세요";
-                    echo json_encode($res, JSON_NUMERIC_CHECK);
-                    break;
-                }
 
-                if ($sort==5) { // 신규매장순 sort =1 로 변경
-//                echo 'notsort';
+                if (empty($sort)|$sort==1) { // 추천순
 
                     if ($coupon = 'Y' && !empty($coupon)) {
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByNew1';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNew1($cheetah, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByRecommend1($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
                         } else {
-//                        echo 'getOrderByNew2';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNew2($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByRecommend2($cheetah, $deliveryfee, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -580,17 +509,15 @@ try {
                     } else {
 
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByNew3';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNew3($cheetah, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByRecommend3($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
                         } else {
-//                        echo 'getOrderByNew4';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNew4($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByRecommend4($cheetah, $deliveryfee, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -599,21 +526,18 @@ try {
 
                     }
 
-                } else if ($sort == 1) { //신규매장순
-//                echo 'sort1신규매장순 ';
+                } else if ($sort == 2) { //주문많은순
                     if ($coupon = 'Y' && !empty($coupon)) {
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByNew1';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNew1($cheetah, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByMany1($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
                         } else {
-//                        echo 'getOrderByNew2';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNew2($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByMany2($cheetah, $deliveryfee, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -623,17 +547,15 @@ try {
                     } else {
 
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByNew3';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNew3($cheetah, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByMany3($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
                         } else {
-//                        echo 'getOrderByNew4';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNew4($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByMany4($cheetah, $deliveryfee, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -641,22 +563,56 @@ try {
                         }
 
                     }
-                } else if ($sort == 2) { //별점높은순
-//                echo '별점높은순 ';
+                }  else if ($sort == 3) { //가까운순
                     if ($coupon = 'Y' && !empty($coupon)) {
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByStar1';
                             $storeIdxList = array();
-                            $queryResult = getOrderByStar1($cheetah, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByNear1($cheetah, $mincost, $userIdxInToken);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
-                        } //if(empty($deliveryfee)|$deliveryfee==1000 |$deliveryfee==2000| $deliveryfee==3000){
+                        } else {
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNear2($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+
+                        }
+                    } else {
+
+                        if ($deliveryfee == -1) {
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNear3($cheetah, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        } else {
+                            $storeIdxList = array();
+                            $queryResult = getOrderByNear4($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        }
+
+                    }
+                }else if ($sort == 4) { //별점높은순
+                    if ($coupon = 'Y' && !empty($coupon)) {
+                        if ($deliveryfee == -1) {
+                            $storeIdxList = array();
+                            $queryResult = getOrderByStar1($cheetah, $mincost);
+                            $s = 0;
+                            while ($s < count($queryResult)) {
+                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
+                            }
+                        }
                         else {
-//                        echo 'getOrderByStar2';
                             $storeIdxList = array();
-                            $queryResult = getOrderByStar2($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByStar2($cheetah, $deliveryfee,$mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -666,17 +622,15 @@ try {
                     } else {
 
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByStar3';
                             $storeIdxList = array();
-                            $queryResult = getOrderByStar3($cheetah, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByStar3($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
                         } else {
-//                        echo 'getOrderByStar4';
                             $storeIdxList = array();
-                            $queryResult = getOrderByStar4($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByStar4($cheetah, $deliveryfee, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -684,21 +638,19 @@ try {
                         }
 
                     }
-                } else if ($sort == 3) { //가까운순
-//                echo '33가까운순 ';
+
+                }else if ($sort == 5) { //신규매장순
                     if ($coupon = 'Y' && !empty($coupon)) {
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByNear1';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNear1($cheetah, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByNew1($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
                         } else {
-//                        echo 'getOrderByNear2';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNear2($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByNew2($cheetah, $deliveryfee, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -708,17 +660,15 @@ try {
                     } else {
 
                         if ($deliveryfee == -1) {
-//                        echo 'getOrderByStar3';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNear3($cheetah, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByNew3($cheetah, $mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
                             }
                         } else {
-//                        echo 'getOrderByStar4';
                             $storeIdxList = array();
-                            $queryResult = getOrderByNear4($cheetah, $deliveryfee, $mincost, $userIdxInToken);
+                            $queryResult = getOrderByNew4($cheetah, $deliveryfee,$mincost);
                             $s = 0;
                             while ($s < count($queryResult)) {
                                 array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
@@ -726,48 +676,7 @@ try {
                         }
 
                     }
-                }else if ($sort == 4) { //주문많은순
-//                echo '33가까운순 ';
-                    if ($coupon = 'Y' && !empty($coupon)) {
-                        if ($deliveryfee == -1) {
-//                        echo 'getOrderByNear1';
-                            $storeIdxList = array();
-                            $queryResult = getOrderByNear1($cheetah, $mincost, $userIdxInToken);
-                            $s = 0;
-                            while ($s < count($queryResult)) {
-                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
-                            }
-                        } else {
-//                        echo 'getOrderByNear2';
-                            $storeIdxList = array();
-                            $queryResult = getOrderByNear2($cheetah, $deliveryfee, $mincost, $userIdxInToken);
-                            $s = 0;
-                            while ($s < count($queryResult)) {
-                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
-                            }
 
-                        }
-                    } else {
-
-                        if ($deliveryfee == -1) {
-//                        echo 'getOrderByStar3';
-                            $storeIdxList = array();
-                            $queryResult = getOrderByNear3($cheetah, $mincost, $userIdxInToken);
-                            $s = 0;
-                            while ($s < count($queryResult)) {
-                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
-                            }
-                        } else {
-//                        echo 'getOrderByStar4';
-                            $storeIdxList = array();
-                            $queryResult = getOrderByNear4($cheetah, $deliveryfee, $mincost, $userIdxInToken);
-                            $s = 0;
-                            while ($s < count($queryResult)) {
-                                array_push($storeIdxList, $queryResult[$s++]['storeIdx']);
-                            }
-                        }
-
-                    }
                 }
 
                 $arrayList = array();
@@ -797,7 +706,10 @@ try {
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 break;
             }
-            break;
+
+
+
+
 
         case "getStoreDetail":
             http_response_code(200);
@@ -937,25 +849,25 @@ try {
 
         case "hartStore":
             http_response_code(200);
-            $userIdxInToken=14;
+//            $userIdxInToken=14;
             $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
-//            $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
-//            if (empty($jwt)){
-//                $res->isSuccess = FALSE;
-//                $res->code = 2000;
-//                $res->message = "토큰을 입력하세요.";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                addErrorLogs($errorLogs, $res, $req);
-//                return;
-//            }
-//            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
-//                $res->isSuccess = FALSE;
-//                $res->code = 2001;
-//                $res->message = "유효하지 않은 토큰입니다.";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                addErrorLogs($errorLogs, $res, $req);
-//                return;
-//            }
+            $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
+            if (empty($jwt)){
+                $res->isSuccess = FALSE;
+                $res->code = 2000;
+                $res->message = "토큰을 입력하세요.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
+                $res->isSuccess = FALSE;
+                $res->code = 2001;
+                $res->message = "유효하지 않은 토큰입니다.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
             // 가져온토큰을 어떻게 처리할지 넘기긴 하는데 밸리데이션
             if(!isValidStore($req->storeIdx)){ // product 테이블에 인덱스 있는지
                 $res->isSuccess = False;
@@ -1005,8 +917,8 @@ try {
             }
 
 
-            $res->hartCount = getHartCount($userIdxInToken);
-            $res->hartStore = getHartStore($userIdxInToken);
+            $res->heartCount = getHartCount($userIdxInToken);
+            $res->heartStore = getHartStore($userIdxInToken);
             $res->isSuccess = TRUE;
             $res->code = 1000;
             $res->message = "즐겨찾기 조회 성공";

@@ -44,9 +44,9 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     // 메뉴 세부조회
     $r->addRoute('GET', '/menus/{menuIdx}', ['StoreController', 'getMenuOption']);
     // 즐겨찾기 추가
-    $r->addRoute('POST', '/stores/hart', ['StoreController', 'hartStore']);
+    $r->addRoute('POST', '/stores/heart', ['StoreController', 'hartStore']);
     // 즐겨찾기 조회
-    $r->addRoute('GET', '/harts', ['StoreController', 'getHartStore']);
+    $r->addRoute('GET', '/hearts', ['StoreController', 'getHartStore']);
     // 프로모션 조회
     $r->addRoute('GET', '/promotions', ['StoreController', 'getPromotionAll']);
     // 프로모션 세부조회
@@ -94,7 +94,9 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     // 새로들어왔어요 조회-다른방식으로
     $r->addRoute('GET', '/new-stores', ['LookupController', 'getNewStore']);
     // 카테고리 세부조회
-    $r->addRoute('GET', '/categorys/{storeCatIdx}', ['LookupController', 'getCategoryDetail']);
+    $r->addRoute('GET', '/categorys/{categoryIdx}', ['LookupController', 'getCategoryDetail']);
+    // 검색어로 조회
+    $r->addRoute('GET', '/keyword', ['LookupController', 'getKewordStore']);
 
 
 
