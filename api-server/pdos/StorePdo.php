@@ -87,13 +87,11 @@ function getFranchiseNo($latitude,$longitude)
                  + sin(radians(?)) * sin(radians(s.latitude)))) ,1),'km') as distance
         from Store as s
         where s.isDeleted='N' and isFranchise='Y'
-                  and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-    + sin(radians(?)) * sin(radians(s.latitude)))) < 5
         order by s.createdAt desc limit 5;";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
-    $st->execute([$latitude,$longitude,$latitude,$latitude,$longitude,$latitude]);
+    $st->execute([$latitude,$longitude,$latitude]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -140,14 +138,12 @@ function getOpenStoreNo($latitude,$longitude)
         from Store as s
         where s.isDeleted='N' 
                 and TIMESTAMPDIFF(DAY, s.createdAt, current_timestamp())<30
-              and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-                 + sin(radians(?)) * sin(radians(s.latitude)))) < 5
        order by s.createdAt desc limit 5 ;
 ";
 
     $st = $pdo->prepare($query);
     //    $st->execute([$param,$param]);
-    $st->execute([$latitude,$longitude,$latitude,$latitude,$longitude,$latitude]);
+    $st->execute([$latitude,$longitude,$latitude]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -193,8 +189,6 @@ function getFranchise($userIdxInToken)
                  + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ,1),'km') as distance
         from Store as s, UserInfo as us
         where s.isDeleted='N' and isFranchise='Y'  and us.isDeleted='N' and us.userIdx=? 
-              and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-                 + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
        order by s.createdAt desc limit 5 ;
 ";
 
@@ -247,8 +241,6 @@ function getOpenStore($userIdxInToken)
         from Store as s, UserInfo as us
         where s.isDeleted='N' and us.isDeleted='N' and us.userIdx=?
                 and TIMESTAMPDIFF(DAY, s.createdAt, current_timestamp())<30
-              and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-                 + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
        order by s.createdAt desc limit 5 ;
 ";
 
@@ -304,8 +296,6 @@ from Store as s, UserInfo as us
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx) and us.isDeleted='N' and us.userIdx=?
-      and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
 order by s.createdAt DESC;
 ";
 
@@ -332,8 +322,6 @@ where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
       and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx) and us.isDeleted='N' and us.userIdx=?
-      and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
 order by s.createdAt DESC;
 ";
     $st = $pdo->prepare($query);
@@ -356,8 +344,6 @@ select s.storeIdx,s.createdAt,
 from Store as s, UserInfo as us
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?) and us.isDeleted='N' and us.userIdx=?
-      and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
 order by s.createdAt DESC;
 ";
 
@@ -383,8 +369,6 @@ from Store as s, UserInfo as us
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee=if(isnull(?),s.deliveryFee,?) and us.isDeleted='N' and us.userIdx=?
-      and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
 order by s.createdAt DESC;
 ";
 
@@ -413,8 +397,6 @@ from Store as s, UserInfo as us
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx) and us.isDeleted='N' and us.userIdx=?
-      and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
 order by storeStar DESC;
 ";
 
@@ -445,8 +427,6 @@ where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
       and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx) and us.isDeleted='N' and us.userIdx=?
-      and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
 order by storeStar DESC;
 
 ";
@@ -476,8 +456,6 @@ where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
       and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx) and us.isDeleted='N' and us.userIdx=?
-      and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
 order by storeStar DESC;
 ";
 
@@ -507,8 +485,6 @@ from Store as s, UserInfo as us
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee<=if(isnull(?),s.deliveryFee,?) and us.isDeleted='N' and us.userIdx=?
-      and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
 order by storeStar DESC;
 ";
 
@@ -537,8 +513,6 @@ from Store as s, UserInfo as us
 where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx) and us.isDeleted='N' and us.userIdx=?
-      and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
 order by (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
     + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ;
 ";
@@ -570,8 +544,6 @@ where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
       and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx) and us.isDeleted='N' and us.userIdx=?
-      and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
 order by (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
     + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ;
 
@@ -600,8 +572,6 @@ select s.storeIdx,
 from Store as s, UserInfo as us
 where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?) and us.isDeleted='N' and us.userIdx=?
-      and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
 order by (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
     + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ;
 
@@ -633,8 +603,6 @@ from Store as s, UserInfo as us
 where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee<=if(isnull(?),s.deliveryFee,?) and us.isDeleted='N' and us.userIdx=?
-      and (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-    + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) < 5
 order by (6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
     + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ;
 ";
@@ -678,7 +646,12 @@ function getOrderByOne($storeIdx,$userIdxInToken)
                        else '-1'
                end as coupon,
                concat(ROUND((6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
-                 + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ,1),'km') as distance
+                 + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ,1),'km') as distance,
+               case
+                when TIMESTAMPDIFF(DAY, s.createdAt, current_timestamp())<30
+                then 'Y'
+                else 'N'
+                end as isnewStore
         from Store as s,UserInfo as us
         where s.isDeleted='N' and us.isDeleted='N' and s.storeIdx=? and userIdx=?;";
 
@@ -722,7 +695,12 @@ function getOrderByOneNo($storeIdx,$latitude,$longitude)
                        else '-1'
                end as coupon,
                concat(ROUND((6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-                 + sin(radians(?)) * sin(radians(s.latitude)))) ,1),'km') as distance
+                 + sin(radians(?)) * sin(radians(s.latitude)))) ,1),'km') as distance,
+               case
+                when TIMESTAMPDIFF(DAY, s.createdAt, current_timestamp())<30
+                then 'Y'
+                else 'N'
+                end as isnewStore
         from Store as s
         where s.isDeleted='N' and s.storeIdx=? ;";
 
@@ -740,7 +718,7 @@ function getOrderByOneNo($storeIdx,$latitude,$longitude)
 
 
 // 회원 아닐때
-function getOrderByNew1No($cheetah,$mincost,$latitude,$longitude)
+function getOrderByNew1No($cheetah,$mincost)
 {
     $pdo = pdoSqlConnect();
     $query = "
@@ -749,13 +727,11 @@ from Store as s
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx)
-      and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-    + sin(radians(?)) * sin(radians(s.latitude)))) < 5
 order by s.createdAt DESC;
 ";
 
     $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$latitude,$longitude,$latitude]);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -765,7 +741,7 @@ order by s.createdAt DESC;
     return $res;
 }
 
-function getOrderByNew2No($cheetah,$deliveryfee,$mincost,$latitude,$longitude)
+function getOrderByNew2No($cheetah,$deliveryfee,$mincost)
 {
     $pdo = pdoSqlConnect();
     $query = "
@@ -775,12 +751,10 @@ where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
       and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx)
-      and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-    + sin(radians(?)) * sin(radians(s.latitude)))) < 5
 order by s.createdAt DESC;
 ";
     $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee,$latitude,$longitude,$latitude]);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -789,7 +763,7 @@ order by s.createdAt DESC;
 
     return $res;
 }
-function getOrderByNew3No($cheetah,$mincost,$latitude,$longitude)
+function getOrderByNew3No($cheetah,$mincost)
 {
     $pdo = pdoSqlConnect();
     $query = "
@@ -797,13 +771,11 @@ select s.storeIdx,s.createdAt
 from Store as s
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-    + sin(radians(?)) * sin(radians(s.latitude)))) < 5
 order by s.createdAt DESC;
 ";
 
     $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$latitude,$longitude,$latitude]);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -813,7 +785,7 @@ order by s.createdAt DESC;
     return $res;
 }
 
-function getOrderByNew4No($cheetah,$deliveryfee,$mincost,$latitude,$longitude)
+function getOrderByNew4No($cheetah,$deliveryfee,$mincost)
 {
     $pdo = pdoSqlConnect();
     $query = "
@@ -822,13 +794,11 @@ from Store as s
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
-      and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-    + sin(radians(?)) * sin(radians(s.latitude)))) < 5
 order by s.createdAt DESC;
 ";
 
     $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee,$latitude,$longitude,$latitude]);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -837,7 +807,7 @@ order by s.createdAt DESC;
 
     return $res;
 }
-function getOrderByStar1No($cheetah,$mincost,$latitude,$longitude)
+function getOrderByStar1No($cheetah,$mincost)
 {
     $pdo = pdoSqlConnect();
     $query = "
@@ -850,13 +820,11 @@ from Store as s
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx)
-      and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-    + sin(radians(?)) * sin(radians(s.latitude)))) < 5
 order by storeStar DESC;
 ";
 
     $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$latitude,$longitude,$latitude]);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -866,7 +834,7 @@ order by storeStar DESC;
     return $res;
 }
 
-function getOrderByStar2No($cheetah,$deliveryfee,$mincost,$latitude,$longitude)
+function getOrderByStar2No($cheetah,$deliveryfee,$mincost)
 {
     $pdo = pdoSqlConnect();
     $query = "
@@ -880,13 +848,11 @@ where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
       and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx)
-      and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-    + sin(radians(?)) * sin(radians(s.latitude)))) < 5
 order by storeStar DESC;
 
 ";
     $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee,$latitude,$longitude,$latitude]);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -895,7 +861,7 @@ order by storeStar DESC;
 
     return $res;
 }
-function getOrderByStar3No($cheetah,$mincost,$latitude,$longitude)
+function getOrderByStar3No($cheetah,$mincost)
 {
     $pdo = pdoSqlConnect();
     $query = "
@@ -907,14 +873,12 @@ select s.storeIdx,
 from Store as s
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-    + sin(radians(?)) * sin(radians(s.latitude)))) < 5
 order by storeStar DESC;
 
 ";
 
     $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$latitude,$longitude,$latitude]);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -924,7 +888,7 @@ order by storeStar DESC;
     return $res;
 }
 
-function getOrderByStar4No($cheetah,$deliveryfee,$mincost,$latitude,$longitude)
+function getOrderByStar4No($cheetah,$deliveryfee,$mincost)
 {
     $pdo = pdoSqlConnect();
     $query = "
@@ -937,13 +901,11 @@ from Store as s
 where s.isDeleted='N' and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee<=if(isnull(?),s.deliveryFee,?)
-      and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-    + sin(radians(?)) * sin(radians(s.latitude)))) < 5
 order by storeStar DESC;
 ";
 
     $st = $pdo->prepare($query);
-    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee,$latitude,$longitude,$latitude]);
+    $st->execute([$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -963,14 +925,12 @@ from Store as s
 where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx)
-      and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-    + sin(radians(?)) * sin(radians(s.latitude)))) < 5
 order by (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
     + sin(radians(?)) * sin(radians(s.latitude)))) ;
 ";
 
     $st = $pdo->prepare($query);
-    $st->execute([$latitude,$longitude,$latitude,$cheetah,$cheetah,$mincost,$mincost,$latitude,$longitude,$latitude,$latitude,$longitude,$latitude]);
+    $st->execute([$latitude,$longitude,$latitude,$cheetah,$cheetah,$mincost,$mincost,$latitude,$longitude,$latitude]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -992,13 +952,11 @@ where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee=if(isnull(?),s.deliveryFee,?)
       and EXISTS(select sc.couponIdx from StoreCoupon as sc where sc.storeIdx=s.storeIdx)
-      and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-    + sin(radians(?)) * sin(radians(s.latitude)))) < 5
 order by (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
     + sin(radians(?)) * sin(radians(s.latitude)))) ;
 ";
     $st = $pdo->prepare($query);
-    $st->execute([$latitude,$longitude,$latitude,$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee,$latitude,$longitude,$latitude,$latitude,$longitude,$latitude]);
+    $st->execute([$latitude,$longitude,$latitude,$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee,$latitude,$longitude,$latitude]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -1017,15 +975,13 @@ select s.storeIdx,
 from Store as s
 where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?) and s.deliveryFee =-1
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
-      and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-    + sin(radians(?)) * sin(radians(s.latitude)))) < 5
 order by (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
     + sin(radians(?)) * sin(radians(s.latitude)))) ;
 
 ";
 
     $st = $pdo->prepare($query);
-    $st->execute([$latitude,$longitude,$latitude,$cheetah,$cheetah,$mincost,$mincost,$latitude,$longitude,$latitude,$latitude,$longitude,$latitude]);
+    $st->execute([$latitude,$longitude,$latitude,$cheetah,$cheetah,$mincost,$mincost,$latitude,$longitude,$latitude]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -1046,14 +1002,12 @@ from Store as s
 where s.isDeleted='N'  and s.isCheetah=if(isnull(?),s.isCheetah,?)
       and s.minOrderCost>=if(isnull(?),s.minOrderCost,?)
       and s.deliveryFee<=if(isnull(?),s.deliveryFee,?)
-      and (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
-    + sin(radians(?)) * sin(radians(s.latitude)))) < 5
 order by (6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
     + sin(radians(?)) * sin(radians(s.latitude)))) ;
 ";
 
     $st = $pdo->prepare($query);
-    $st->execute([$latitude,$longitude,$latitude,$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee,$latitude,$longitude,$latitude,$latitude,$longitude,$latitude]);
+    $st->execute([$latitude,$longitude,$latitude,$cheetah,$cheetah,$mincost,$mincost,$deliveryfee,$deliveryfee,$latitude,$longitude,$latitude]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
@@ -1211,8 +1165,7 @@ function getMenuInfo($menuIdx)
 {
     $pdo = pdoSqlConnect();
     $query = "
-        select menuName, menuDetail,
-               concat(cast(FORMAT(menuPrice, 0) as char), '원') as menuPrice
+        select menuIdx,menuName, menuDetail,menuPrice
         from Menu
         where menuIdx=? and isDeleted='N';";
     $st = $pdo->prepare($query);
@@ -1318,12 +1271,12 @@ function getOptCatName($menuIdx,$catIdx)
 {
     $pdo = pdoSqlConnect();
     $query = "
-        select menuOptCatName from MenuOptionCat
+        select menuOptCatName,mandatory,maxSelect from MenuOptionCat
         where menuIdx =? and optCatIdx=? and isDeleted='N';";
     $st = $pdo->prepare($query);
     $st->execute([$menuIdx,$catIdx]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchColumn();
+    $res = $st->fetchAll();
     // fetcho one으로 해서 for문돌리기 행전체수만큼
 
     $st = null;
@@ -1378,10 +1331,15 @@ function getOptMenuCategory($menuIdx,$catIdx)
 {
     $pdo = pdoSqlConnect();
     $query = "
-        select menuOptIdx, menuOptName,
-               concat(cast(FORMAT(optPrice, 0) as char), '원') as menuPrice
+        select menuOptIdx,
+               case
+                   when isnull(optPrice)
+                   then menuOptName
+                       else concat(menuOptName, '(+ ',cast(FORMAT(optPrice, 0) as char), '원)')
+                           end as menuOptName,
+               optPrice
         from MenuOption
-        where menuIdx=? and optCatIdx =? and isDeleted='N' ;    
+        where menuIdx=? and optCatIdx =? and isDeleted='N';  
 ";
     $st = $pdo->prepare($query);
     $st->execute([$menuIdx,$catIdx]);
