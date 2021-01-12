@@ -538,3 +538,80 @@ values(?,?,?,?,?,if(isnull(?),'N',?),?,?);";
     return $orderIdx;
 
 }
+
+function getOrderInfo($userIdxInToken,$orderStateList)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select oi.orderIdx,
+       oi.storeIdx,
+       (select s.storeName
+        from Store as s
+        where s.storeIdx=oi.storeIdx) as storeName,
+      (select sp.storePhoto
+        from StorePhoto as sp
+        where sp.storeIdx=oi.storeIdx and sp.sequence=1) as storePhoto,
+        concat(cast(FORMAT(oi.orderPrice, 0) as char), '원') as orderPrice,
+       oi.orderState,
+       (select os.orderStateName
+        from OrderState as os
+        where os.orderStateIdx = oi.orderState) as orderStateName,
+       date_format(oi.orderTime,'%Y-%m-%d %H:%i') as orderTime
+from OrderInfo as oi
+where oi.isDeleted='N' and oi.userIdx = ? and oi.orderState in  (".implode(',',$orderStateList).");";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+
+function getOrderMenu($orderIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select (select menuIdx from Menu as m where m.isDeleted='N' and o.menuIdx=m.menuIdx) as menuIdx,
+       o.quantity,
+       (select menuName from Menu as m where m.isDeleted='N' and o.menuIdx=m.menuIdx) as menuName
+from OrderDetail as o
+where o.isDeleted='N' and o.orderIdx= ?; ";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$orderIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function getOrderMenuOption($orderIdx,$menuIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select oo.menuOptIdx,
+       (select menuOptName from MenuOption as mo where mo.isDeleted='N' and oo.menuOptIdx=mo.menuOptIdx) as menuOptName
+from OrderOptionDetail as oo
+where oo.isDeleted='N' and oo.orderIdx= ? and oo.menuIdx=?;;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$orderIdx,$menuIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}

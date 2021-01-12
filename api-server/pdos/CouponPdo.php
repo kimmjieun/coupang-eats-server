@@ -32,7 +32,11 @@ function isValidUserCoupon($couponIdx,$userIdx)
 function isValidStoreCoupon($storeIdx)
 {
     $pdo = pdoSqlConnect();
-    $query = "select exists (select couponIdx from StoreCoupon where isDeleted='N' and  storeIdx=?) exist;";
+    $query = "
+select exists (select couponIdx from StoreCoupon where isDeleted='N' and storeIdx=?
+            and couponIdx in (select couponIdx
+                                from Coupon
+                                where isDeleted='N'and date(expiredAt) >= date(now()) )) exist;";
     $st = $pdo->prepare($query);
     $st->execute([$storeIdx]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
@@ -43,7 +47,26 @@ function isValidStoreCoupon($storeIdx)
 
     return intval($res[0]['exist']);
 }
+function getCouponInfo($storeIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+select couponIdx, salePrice
+from Coupon
+where couponIdx = (select couponIdx from StoreCoupon where isDeleted='N' and storeIdx=?) and date(expiredAt) >= date(now()) ;
 
+    ";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$storeIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+    $st = null;
+    $pdo = null;
+
+    return $res[0]; // 배열에 첫번쨰원소만
+
+}
 
 function isValidUserIdx($userIdx)
 {

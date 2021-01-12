@@ -498,7 +498,7 @@ try {
             break;
 
 
-        case "getOrder":
+        case "makeOrder":
             http_response_code(200);
 //            $userIdxInToken=14;
             // prod올릴때 주석해제
@@ -638,62 +638,7 @@ try {
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 break;
             }
-//원본
-//            $orderIdx=addOrderInfo($storeIdx,$userIdxInToken,$paymentIdx,$totalPrice,$toStore,$noPlastic,$deliveryReqIdx,$orderState ); //주문정보내고 인덱스얻기
-//            if(empty($orderIdx)){
-//                $res->isSuccess = FALSE;
-//                $res->code = 3000;
-//                $res->message = "주문인덱스가 없습니다.";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                break;
-//            }
-//
-//
-//            $orderMenu=getCart($userIdxInToken);
-//            if(empty($orderMenu)){
-//                $res->isSuccess = FALSE;
-//                $res->code = 3001;
-//                $res->message = "카트에서 메뉴를 가져올 수 없습니다.";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                break;
-//            }
-//            $i=0;
-//            while(count($orderMenu)>$i){
-//                addOrderDetail($orderIdx, $orderMenu[$i]['menuIdx'], $orderMenu[$i]['quantity']);
-//                //카트정보 Y처리 트랜잭션
-//                $i++;
-//            }
-//
-//            $orderMenuOption=getCartOption($userIdxInToken);
-//            if(empty($orderMenuOption)){
-//                $res->isSuccess = FALSE;
-//                $res->code = 3001;
-//                $res->message = "카트에서 메뉴옵션을 가져올 수 없습니다.";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                break;
-//            }
-//            $j=0;
-//            while(count($orderMenuOption)>$j){
-//                addOrderOptionDetail($orderIdx, $orderMenuOption[$j]['menuIdx'], $orderMenuOption[$j]['optIdx']);
-//                //카트정보 Y처리 트랜잭션
-//                $j++;
-//            }
-//            $storeInfo=getStore($userIdxInToken);
-//            if(empty($storeInfo)){
-//                $res->isSuccess = FALSE;
-//                $res->code = 3000;
-//                $res->message = "최소주문금액정보가 없습니다.";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                break;
-//            }
-//            $minOrderCost=$storeInfo[0]['minOrderCost'];
-//            if($totalPrice<$minOrderCost){
-//                $res->isSuccess = FALSE;
-//                $res->code = 3000;
-//                $res->message = "최소주문금액을 맞추세요.";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                break;
-//            }
+
             // 가격제한$orderIdx
             $orderIdx=addOrderInfo($storeIdx,$userIdxInToken,$paymentIdx,$totalPrice,$toStore,$noPlastic,$deliveryReqIdx,$orderState,
                 $orderMenu,$orderMenuOption); //주문정보내고 인덱스얻기
@@ -701,6 +646,81 @@ try {
             $res->isSuccess = TRUE;
             $res->code = 1000;
             $res->message = "주문하기 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
+
+        case "getOrderDetail":
+            http_response_code(200);
+//            $userIdxInToken=14;
+            // prod올릴때 주석해제
+            $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
+            $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
+            if (empty($jwt)){
+                $res->isSuccess = FALSE;
+                $res->code = 2000;
+                $res->message = "토큰을 입력하세요.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                break;
+            }
+            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
+                $res->isSuccess = FALSE;
+                $res->code = 2001;
+                $res->message = "유효하지 않은 토큰입니다.";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                break;
+            }
+            $orderState = isset($_GET['orderstate']) ? $_GET['orderstate'] : '';
+            if(empty($orderState)){
+                $res->isSuccess = TRUE;
+                $res->code = 2000;
+                $res->message = "주문내역 옵션을 입력하세요(1:과거주문내역 or 2:준비중)";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                break;
+            }
+            if($orderState==1){
+                $orderStateList=[5,6];
+            }
+            else{
+                $orderStateList=[1,2,3,4];
+            }
+            $orderInfo=getOrderInfo($userIdxInToken,$orderStateList);
+            // 이 오더인포를 반복문으로 돌려서 오더인덱스에 해당하는 것들 붙이게끔
+            $i=0;
+            $menuList=array();
+            while(count($orderInfo)>$i) {
+                $orderList = array();
+                $orderIdx = $orderInfo[$i]['orderIdx'];
+                $orderMenuResult = getOrderMenu($orderIdx); //메뉴여러개
+//                echo $orderMenuResult.'ddd';
+                $j = 0;
+                $optionList=array();
+                while ($j < count($orderMenuResult)) {
+                    $menuIdx = $orderMenuResult[$j]['menuIdx'];
+                    $ordeMenuOptionList = getOrderMenuOption($orderIdx, $menuIdx);
+                    $k=0;
+                    $optionNameList=array();
+                    while(count($ordeMenuOptionList)>$k){
+                        $menuOptName=$ordeMenuOptionList[$k]['menuOptName'];
+                        array_push($optionNameList,$menuOptName);
+                        $k++;
+                    }
+                    $orderMenuResult[$j]['optionNameList']=$optionNameList;
+                    $j++;
+                }
+                array_push($menuList,$orderMenuResult);
+                $orderInfo[$i]['menuList']=$menuList;
+
+                $i++;
+            }
+
+            $res->result = $orderInfo;
+
+            $res->isSuccess = TRUE;
+            $res->code = 1000;
+            $res->message = "주문내역 조회하기 성공";
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 

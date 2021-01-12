@@ -8,6 +8,7 @@ require './pdos/AddressPdo.php';
 require './pdos/CartPdo.php';
 require './pdos/PayPdo.php';
 require './pdos/CouponPdo.php';
+require './pdos/LookupPdo.php';
 require './vendor/autoload.php';
 
 
@@ -38,30 +39,27 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
 //    $r->addRoute('GET', '/home3', ['StoreController', 'getHome3']);
     // 홈화면조회
     $r->addRoute('GET', '/home', ['StoreController', 'getHome2']);
-    // 골라먹는맛집 세부 조회
+    // 매장 세부 조회
     $r->addRoute('GET', '/stores/{storeIdx}', ['StoreController', 'getStoreDetail']);
-    // 인기프랜차이즈 조회
-    //$r->addRoute('GET', '/franchise-stores', ['StoreController', 'getFranchiseStore']);
-    // 새로들어왔어요 조회
-    //$r->addRoute('GET', '/new-stores', ['StoreController', 'getNewStore']);
     // 메뉴 세부조회
     $r->addRoute('GET', '/menus/{menuIdx}', ['StoreController', 'getMenuOption']);
-
     // 즐겨찾기 추가
     $r->addRoute('POST', '/stores/hart', ['StoreController', 'hartStore']);
     // 즐겨찾기 조회
     $r->addRoute('GET', '/harts', ['StoreController', 'getHartStore']);
-    // 프로모션 세부조회 /home/promotions/:promotionIdx
+    // 프로모션 조회
+    $r->addRoute('GET', '/promotions', ['StoreController', 'getPromotionAll']);
+    // 프로모션 세부조회
     $r->addRoute('GET', '/promotions/{promotionIdx}', ['StoreController', 'getPromotionDetail']);
     // 카테고리 조회 API
     $r->addRoute('GET', '/category', ['StoreController', 'getCategory']);
-
-
     // 매장/원산지 정보조회 API
     $r->addRoute('GET', '/stores/{storeIdx}/info', ['StoreController', 'introduceStore']);
 
     /* ********************************* jwt ********************************* */
+    // 카카오 로그인
     $r->addRoute('POST', '/kakao-login', ['JWTController', 'createKakaoJwt']); // 바디
+    // 네이버 로그인
     $r->addRoute('POST', '/naver-login', ['JWTController', 'createNaverJwt']); // 바디
 
     /* ********************************* address ********************************* */
@@ -69,17 +67,16 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('PATCH', '/address', ['AddressController', 'setAddress']);
 
     /* ********************************* cart ********************************* */
-    // 카트담기
-//    $r->addRoute('POST', '/cart', ['CartController', 'createCart']);
-    // 카트담기
-//    $r->addRoute('POST', '/cart', ['StoreController', 'createCart']);
+    // 카트 담기
     $r->addRoute('POST', '/carts', ['CartController', 'addCart']);
+    // 새로 카트 담기
     $r->addRoute('POST', '/newcarts', ['CartController', 'addNewCart']);
     // 카트보기
     $r->addRoute('GET', '/carts', ['CartController', 'getCart']);
     // 주문하기
-    $r->addRoute('POST', '/order', ['CartController', 'getOrder']);
-
+    $r->addRoute('POST', '/order', ['CartController', 'makeOrder']);
+    // 주문내역조회
+    $r->addRoute('GET', '/order', ['CartController', 'getOrderDetail']);
 
     /* ********************************* pay ********************************* */
     $r->addRoute('GET', '/payment', ['PayController', 'pay']);
@@ -88,6 +85,19 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('POST', '/stores/{storeIdx}/coupon', ['CouponController', 'receiveCoupon']);
     // 쿠폰조회 API
     $r->addRoute('GET', '/coupons/{userIdx}', ['CouponController', 'getUserCoupon']);
+
+    /* ********************************* lookup ********************************* */
+
+
+    // 인기프랜차이즈 조회-원래방식으로
+    $r->addRoute('GET', '/franchise-stores', ['LookupController', 'getFranchiseStore']);
+    // 새로들어왔어요 조회-다른방식으로
+    $r->addRoute('GET', '/new-stores', ['LookupController', 'getNewStore']);
+    // 카테고리 세부조회
+    $r->addRoute('GET', '/categorys/{storeCatIdx}', ['LookupController', 'getCategoryDetail']);
+
+
+
 
 //    $r->addRoute('GET', '/users', 'get_all_users_handler');
 //    // {id} must be a number (\d+)
@@ -165,10 +175,10 @@ switch ($routeInfo[0]) {
                 $vars = $routeInfo[2];
                 require './controllers/PayController.php';
                 break;
-            case 'CouponController':
+            case 'LookupController':
                 $handler = $routeInfo[1][1];
                 $vars = $routeInfo[2];
-                require './controllers/CouponController.php';
+                require './controllers/LookupController.php';
                 break;
         }
 

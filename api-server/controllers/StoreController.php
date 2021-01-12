@@ -786,82 +786,7 @@ try {
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
-//        case "getStoreDetail":
-//            http_response_code(200);
-//            if(!isValidStore($vars['storeIdx'])){
-//                $res->isSuccess = FALSE;
-//                $res->code = 2000;
-//                $res->message = "유효하지않은 매장입니다.";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                break;
-//            }
-//
-//            $i=0;
-//            $img_arr=array();
-//            $queryResult=getStoreImg($vars['storeIdx']);
-//            while($i<count($queryResult)){
-//                array_push($img_arr,$queryResult[$i++]['storePhoto']);
-//            }
-//
-//
-//            $res->storePhoto = $img_arr;
-//            $res->storeInfo = getStoreInfo($vars['storeIdx']); // 스토어정보 하나씩 가져와야해
-//
-//            $res->photoReview = getPhotoReview($vars['storeIdx']); // 포토리뷰
-//
-//            $catCount= getCatCount($vars['storeIdx']);
-//            $catIdx=1;
-//            $arrayList = array();
-//
-//            while($catCount>=$catIdx){
-//                $temp=array();
-//
-//                $temp['categoryIdx']=$catIdx;
-//                $temp['categoryName']=getCatName($vars['storeIdx'],$catIdx);
-//                $temp['categoryDetail']=getCatDetail($vars['storeIdx'],$catIdx);
-//                $temp['menuList'] =getMenuCategory($vars['storeIdx'],$catIdx);
-//                array_push($arrayList,$temp);
-//                $catIdx++;
-//            }
-//
-//
-//            $res->categoryMenu=$arrayList;
-//
-//            $res->isSuccess = TRUE;
-//            $res->code = 1000;
-//            $res->message = "매장 세부 조회 성공";
-//            echo json_encode($res, JSON_NUMERIC_CHECK);
-//            break;
-        case "getFranchiseStore":
-            http_response_code(200);
-            //주문많은순
-            $arrayList = array();
-            $storeIdx = getFranchiseStoreLastIdx();
-            while($storeIdx>0) {
-                $temp = array();
-                if (isValidStore($storeIdx)) { // 솔직히 필요없어보여
-                    if (!empty(getStoreOne($storeIdx))) { // 삭제해도되나
-                        $temp = getChoiceStoreOne($storeIdx);
-                        $i = 0;
-                        $img_arr = array();
-                        $queryResult = getStoreImg($storeIdx);
-                        while ($i < count($queryResult)) {
-                            array_push($img_arr, $queryResult[$i++]['storePhoto']);
-                        }
-                        $temp['img_arr'] = $img_arr;
-                        array_push($arrayList, $temp);
-                    }
 
-                }
-                $storeIdx = $storeIdx - 1;
-
-            }
-
-            $res->isSuccess = TRUE;
-            $res->code = 1000;
-            $res->message = "인기프랜차이즈 조회 성공";
-            echo json_encode($res, JSON_NUMERIC_CHECK);
-            break;
 
         case "getMenuOption":
             http_response_code(200);
@@ -985,6 +910,17 @@ try {
             $res->message = "즐겨찾기 조회 성공";
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
+
+        case "getPromotionAll":
+            http_response_code(200);
+
+            $res->result = getPromotionAll();
+            $res->isSuccess = TRUE;
+            $res->code = 1000;
+            $res->message = "프로모션 전체 조회 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
+
 
         case "getPromotionDetail":
             http_response_code(200);
