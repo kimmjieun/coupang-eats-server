@@ -71,17 +71,10 @@ function getFranchiseNo($latitude,$longitude)
                        THEN '무료배달'
                    ELSE concat('배달비 ',cast(FORMAT(s.deliveryFee, 0) as char), '원')
                END AS deliveryFee,
-               case
-                   when exists(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       then (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       else '-1'
-               end as coupon,
+              (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now()))) as coupon,
                 (select sp.storePhoto from StorePhoto as sp where sp.sequence=1 and sp.isDeleted='N' and sp.storeIdx=s.storeIdx) as storePhoto,
                concat(ROUND((6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
                  + sin(radians(?)) * sin(radians(s.latitude)))) ,1),'km') as distance
@@ -121,17 +114,10 @@ function getOpenStoreNo($latitude,$longitude)
                        THEN '무료배달'
                    ELSE concat('배달비 ',cast(FORMAT(s.deliveryFee, 0) as char), '원')
                END AS deliveryFee,
-               case
-                   when exists(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       then (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       else '-1'
-               end as coupon,
+              (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now()))) as coupon,
                 (select sp.storePhoto from StorePhoto as sp where sp.sequence=1 and sp.isDeleted='N' and sp.storeIdx=s.storeIdx) as storePhoto,
                concat(ROUND((6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
                  + sin(radians(?)) * sin(radians(s.latitude)))) ,1),'km') as distance
@@ -173,17 +159,10 @@ function getFranchise($userIdxInToken)
                        THEN '무료배달'
                    ELSE concat('배달비 ',cast(FORMAT(s.deliveryFee, 0) as char), '원')
                END AS deliveryFee,
-               case
-                   when exists(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       then (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       else '-1'
-               end as coupon,
+                (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now()))) as coupon,
                 (select sp.storePhoto from StorePhoto as sp where sp.sequence=1 and sp.isDeleted='N' and sp.storeIdx=s.storeIdx) as storePhoto,
                concat(ROUND((6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
                  + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ,1),'km') as distance
@@ -224,17 +203,10 @@ function getOpenStore($userIdxInToken)
                        THEN '무료배달'
                    ELSE concat('배달비 ',cast(FORMAT(s.deliveryFee, 0) as char), '원')
                END AS deliveryFee,
-               case
-                   when exists(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       then (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       else '-1'
-               end as coupon,
+              (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now()))) as coupon,
                 (select sp.storePhoto from StorePhoto as sp where sp.sequence=1 and sp.isDeleted='N' and sp.storeIdx=s.storeIdx) as storePhoto,
                concat(ROUND((6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
                  + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ,1),'km') as distance
@@ -634,17 +606,10 @@ function getOrderByOne($storeIdx,$userIdxInToken)
                    ELSE concat('배달비 ',cast(FORMAT(s.deliveryFee, 0) as char), '원')
                END AS deliveryFee,
                s.deliveryTime,
-               case
-                   when exists(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       then (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       else '-1'
-               end as coupon,
+              (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now()))) as coupon,
                concat(ROUND((6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
                  + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ,1),'km') as distance,
                case
@@ -683,17 +648,10 @@ function getOrderByOneNo($storeIdx,$latitude,$longitude)
                    ELSE concat('배달비 ',cast(FORMAT(s.deliveryFee, 0) as char), '원')
                END AS deliveryFee,
                s.deliveryTime,
-               case
-                   when exists(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       then (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       else '-1'
-               end as coupon,
+              (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now()))) as coupon,
                concat(ROUND((6371 *acos(cos(radians(?)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(?))
                  + sin(radians(?)) * sin(radians(s.latitude)))) ,1),'km') as distance,
                case
@@ -1419,17 +1377,10 @@ function getHartStore($userIdx)
                    ELSE concat('배달비 ',cast(FORMAT(s.deliveryFee, 0) as char), '원')
                END AS deliveryFee,
                s.deliveryTime ,
-               case
-                   when exists(select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       then (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
-                                from Coupon as c
-                                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
-                                                    where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now())))
-                       else '-1'
-               end as coupon,
+              (select concat(cast(FORMAT(c.salePrice, 0) as char), '원 할인쿠폰')
+                from Coupon as c
+                where c.couponIdx=(select sc.couponIdx from StoreCoupon as sc
+                where s.storeIdx = sc.storeIdx and date(c.expiredAt) >= date(now()))) as coupon,
                 (select sp.storePhoto from StorePhoto as sp where sp.sequence=1 and sp.isDeleted='N' and sp.storeIdx=s.storeIdx) as storePhoto,
                concat(ROUND((6371 *acos(cos(radians(us.deliveryLat)) * cos(radians(s.latitude)) * cos(radians(s.longitude) - radians(us.deliveryLon))
                  + sin(radians(us.deliveryLat)) * sin(radians(s.latitude)))) ,1),'km') as distance,
