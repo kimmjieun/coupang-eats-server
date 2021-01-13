@@ -14,44 +14,67 @@ try {
          * API Name : JWT 생성 테스트 API (로그인)
          * 마지막 수정 날짜 : 20.08.29
          */
-        case "createJwt":
-            http_response_code(200);
-
-            // 1) 로그인 시 email, password 받기
-            if (!isValidUser($req->userID, $req->pwd)) { // JWTPdo.php 에 구현
-                $res->isSuccess = FALSE;
-                $res->code = 201;
-                $res->message = "유효하지 않은 아이디 입니다";
-                echo json_encode($res, JSON_NUMERIC_CHECK);
-                return;
-            }
-
-            // 2) JWT 발급
-            // Payload에 맞게 다시 설정 요함, 아래는 Payload에 userIdx를 넣기 위한 과정
-            $userIdx = getUserIdxByID($req->userID);  // JWTPdo.php 에 구현
-            $jwt = getJWT($userIdx, JWT_SECRET_KEY); // function.php 에 구현
-
-            $res->result->jwt = $jwt;
-            $res->isSuccess = TRUE;
-            $res->code = 100;
-            $res->message = "테스트 성공";
-            echo json_encode($res, JSON_NUMERIC_CHECK);
-            break;
+//        case "createJwt":
+//            http_response_code(200);
+//
+//            // 1) 로그인 시 email, password 받기
+//            if (!isValidUser($req->userID, $req->pwd)) { // JWTPdo.php 에 구현
+//                $res->isSuccess = FALSE;
+//                $res->code = 201;
+//                $res->message = "유효하지 않은 아이디 입니다";
+//                echo json_encode($res, JSON_NUMERIC_CHECK);
+//                return;
+//            }
+//
+//            // 2) JWT 발급
+//            // Payload에 맞게 다시 설정 요함, 아래는 Payload에 userIdx를 넣기 위한 과정
+//            $userIdx = getUserIdxByID($req->userID);  // JWTPdo.php 에 구현
+//            $jwt = getJWT($userIdx, JWT_SECRET_KEY); // function.php 에 구현
+//
+//            $res->result->jwt = $jwt;
+//            $res->isSuccess = TRUE;
+//            $res->code = 100;
+//            $res->message = "테스트 성공";
+//            echo json_encode($res, JSON_NUMERIC_CHECK);
+//            break;
+//        case "validateJwt":
+//
+//            $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
+//
+//            // 1) JWT 유효성 검사
+//            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
+//                $res->isSuccess = FALSE;
+//                $res->code = 2000;
+//                $res->message = "유효하지 않은 토큰입니다";
+//                echo json_encode($res, JSON_NUMERIC_CHECK);
+//                addErrorLogs($errorLogs, $res, $req);
+//                return;
+//            }
+//
+//            // 2) JWT Payload 반환
+//            http_response_code(200);
+//            $res->result = getDataByJWToken($jwt, JWT_SECRET_KEY);
+//            $res->isSuccess = TRUE;
+//            $res->code = 1000;
+//            $res->message = "유효성 검사 성공";
+//
+//            echo json_encode($res, JSON_NUMERIC_CHECK);
+//            break;
 
         /*
          * API No. 2
          * API Name : JWT 유효성 검사 테스트 API
          * 마지막 수정 날짜 : 20.08.29
          */
-        case "validateJwt":
+        case "autoLogin":
 
             $jwt = $_SERVER["HTTP_X_ACCESS_TOKEN"];
 
             // 1) JWT 유효성 검사
             if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
                 $res->isSuccess = FALSE;
-                $res->code = 202;
-                $res->message = "유효하지 않은 토큰입니다"; 
+                $res->code = 2000;
+                $res->message = "유효하지 않은 토큰입니다";
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 return;
@@ -59,10 +82,19 @@ try {
 
             // 2) JWT Payload 반환
             http_response_code(200);
-            $res->result = getDataByJWToken($jwt, JWT_SECRET_KEY);
+            $userIdxInToken= getDataByJWToken($jwt, JWT_SECRET_KEY)->userIdx;
+
+            if (!isUser($userIdxInToken)){
+
+                $res->isSuccess = False;
+                $res->code = 2001;
+                $res->message = "유효하지 않은 유저";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                break;
+            }
             $res->isSuccess = TRUE;
-            $res->code = 100;
-            $res->message = "테스트 성공";
+            $res->code = 1000;
+            $res->message = "자동 로그인 성공";
 
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
@@ -198,6 +230,47 @@ try {
                 break;
             }
 
+
+
+        // 회원탈퇴
+        case "deleteUser":
+            http_response_code(200);
+//            $userIdxInToken=14;
+
+            $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
+            $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
+            if (empty($jwt)){
+                $res->isSuccess = FALSE;
+                $res->code = 2000;
+                $res->message = "토큰을 입력하세요";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
+                $res->isSuccess = FALSE;
+                $res->code = 2001;
+                $res->message = "유효하지 않은 토큰입니다";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                addErrorLogs($errorLogs, $res, $req);
+                return;
+            }
+
+            if (!isUser($userIdxInToken)){
+
+                $res->isSuccess = False;
+                $res->code = 2002;
+                $res->message = "유효하지 않은 유저";
+                echo json_encode($res, JSON_NUMERIC_CHECK);
+                break;
+            }
+
+            $res->result=deleteUser($userIdxInToken);
+            $res->isSuccess = TRUE;
+            $res->code = 1000;
+            $res->message = "회원탈퇴 성공";
+            echo json_encode($res, JSON_NUMERIC_CHECK);
+            break;
 
 
 

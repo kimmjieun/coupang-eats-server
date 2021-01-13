@@ -15,21 +15,21 @@
 //    return password_verify($pwd, $res[0]['hash']);
 //
 //}
-function getUserIdxByID($ID)
-{
-    $pdo = pdoSqlConnect();
-    $query = "SELECT userIdx FROM Users WHERE ID = ?;";
-
-    $st = $pdo->prepare($query);
-    $st->execute([$ID]);
-    $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchAll();
-
-    $st = null;
-    $pdo = null;
-
-    return $res[0]['userIdx'];
-}
+//function getUserIdxByID($ID)
+//{
+//    $pdo = pdoSqlConnect();
+//    $query = "SELECT userIdx FROM Users WHERE ID = ?;";
+//
+//    $st = $pdo->prepare($query);
+//    $st->execute([$ID]);
+//    $st->setFetchMode(PDO::FETCH_ASSOC);
+//    $res = $st->fetchAll();
+//
+//    $st = null;
+//    $pdo = null;
+//
+//    return $res[0]['userIdx'];
+//}
 
 function isValidUser($ID){
     $pdo = pdoSqlConnect();
@@ -136,4 +136,34 @@ function newNaverLogin($accessToken)
     $pdo = null;
     return $userIdx;
 
+}
+
+// 회원탈퇴
+function deleteUser($userIdx)
+{
+    $pdo = pdoSqlConnect();
+
+    $query = "UPDATE UserInfo SET isdeleted = 'Y' WHERE userIdx=?;";
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdx]);
+    $st = null;
+    $pdo = null;
+      return ["userIdx"=>$userIdx];
+
+}
+
+function isUser($userIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "select EXISTS(select * from UserInfo where userIdx=? and  isDeleted ='N') exist;";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdx]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchAll();
+
+    $st = null;
+    $pdo = null;
+
+    return intval($res[0]['exist']);
 }

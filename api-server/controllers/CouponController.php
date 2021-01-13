@@ -62,7 +62,6 @@ try {
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 break;
             }
-            // 이미 받았다면 발급완료된 쿠폰입니다
             $res->result = receiveCoupon($req->couponIdx,$userIdxInToken);
             $res->isSuccess = TRUE;
             $res->code = 1000;
@@ -73,6 +72,8 @@ try {
         case "getUserCoupon":
             http_response_code(200);
 //            $userIdxInToken=14;
+//            echo $userIdxInToken;
+//            break;
             $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
             $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
             if (empty($jwt)){
@@ -91,7 +92,8 @@ try {
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
-            if(!isValidUserIdx($vars['userIdx'])){
+
+            if(!isValidUserIdx($userIdxInToken)){
                 $res->isSuccess = FALSE;
                 $res->code = 2002;
                 $res->message = "유효하지않은 유저인덱스";
@@ -99,7 +101,6 @@ try {
                 break;
             }
 
-            // 이미 받았다면 발급완료된 쿠폰입니다
             $res->result = getUserCoupon($userIdxInToken);
             $res->isSuccess = TRUE;
             $res->code = 1000;

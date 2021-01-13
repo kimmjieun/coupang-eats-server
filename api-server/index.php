@@ -24,8 +24,8 @@ ini_set('default_charset', 'utf8mb4');
 //Main Server API
 $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) {
     /* ******************   JWT   ****************** */
-    $r->addRoute('POST', '/jwt', ['JWTController', 'createJwt']);   // JWT 생성: 로그인 + 해싱된 패스워드 검증 내용 추가
-    $r->addRoute('GET', '/jwt', ['JWTController', 'validateJwt']);  // JWT 유효성 검사
+//    $r->addRoute('POST', '/jwt', ['JWTController', 'createJwt']);   // JWT 생성: 로그인 + 해싱된 패스워드 검증 내용 추가
+//    $r->addRoute('GET', '/jwt', ['JWTController', 'validateJwt']);  // JWT 유효성 검사
 
     /* ******************   Test   ****************** */
     $r->addRoute('GET', '/', ['IndexController', 'index']);
@@ -62,6 +62,9 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     // 네이버 로그인
     $r->addRoute('POST', '/naver-login', ['JWTController', 'createNaverJwt']); // 바디
 
+    $r->addRoute('GET', '/deleted-user', ['JWTController', 'deleteUser']);
+
+    $r->addRoute('GET', '/auto-login', ['JWTController', 'autoLogin']);
     /* ********************************* address ********************************* */
     // 주소 설정 api
     $r->addRoute('PATCH', '/address', ['AddressController', 'setAddress']);
@@ -84,8 +87,9 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     // 쿠폰받기 API
     $r->addRoute('POST', '/stores/{storeIdx}/coupon', ['CouponController', 'receiveCoupon']);
     // 쿠폰조회 API
-    $r->addRoute('GET', '/coupons/{userIdx}', ['CouponController', 'getUserCoupon']);
-
+    $r->addRoute('GET', '/coupons', ['CouponController', 'getUserCoupon']);
+    // 쿠폰조회 API
+//    $r->addRoute('GET', '/test', ['CouponController', 'test']);
     /* ********************************* lookup ********************************* */
 
 
@@ -94,7 +98,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     // 새로들어왔어요 조회-다른방식으로
     $r->addRoute('GET', '/new-stores', ['LookupController', 'getNewStore']);
     // 카테고리 세부조회
-    $r->addRoute('GET', '/categorys/{categoryIdx}', ['LookupController', 'getCategoryDetail']);
+    $r->addRoute('GET', '/category/{categoryIdx}', ['LookupController', 'getCategoryDetail']);
     // 검색어로 조회
     $r->addRoute('GET', '/keyword', ['LookupController', 'getKewordStore']);
 
@@ -181,6 +185,11 @@ switch ($routeInfo[0]) {
                 $handler = $routeInfo[1][1];
                 $vars = $routeInfo[2];
                 require './controllers/LookupController.php';
+                break;
+            case 'CouponController':
+                $handler = $routeInfo[1][1];
+                $vars = $routeInfo[2];
+                require './controllers/CouponController.php';
                 break;
         }
 
