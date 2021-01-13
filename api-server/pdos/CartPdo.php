@@ -381,7 +381,7 @@ function getCoupon($userIdxInToken)
 {
     $pdo = pdoSqlConnect();
     $query = "
-select salePrice
+select salePrice,minPrice
 from Coupon
 where couponIdx=(select sc.couponIdx
                     from StoreCoupon as sc
@@ -390,12 +390,12 @@ where couponIdx=(select sc.couponIdx
                                         (select storeIdx from Store as s where s.storeIdx=c.storeIdx ) as storeName
                                         from Cart as c
                                         where c.isDeleted='N' and c.userIdx=?)
-                          and uc.userIdx=?) and isDeleted='N';";
+                          and uc.userIdx=?) and isDeleted='N'and date(expiredAt) >= date(now());";
 
     $st = $pdo->prepare($query);
     $st->execute([$userIdxInToken,$userIdxInToken]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
-    $res = $st->fetchColumn();
+    $res = $st->fetchAll();
 
     $st = null;
     $pdo = null;

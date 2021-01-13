@@ -23,7 +23,7 @@ try {
         case "addCart":
             http_response_code(200);
 //            $userIdxInToken=14;
-//            // prod올릴때 주석해제
+            // prod올릴때 주석해제
             $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
             $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
             if (empty($jwt)){
@@ -122,7 +122,7 @@ try {
             $inputMandatoryCat=array_unique($inputMandatoryCat);
 
             // -> 메뉴옵션인덱스로 카테고리별로 몇개 담았는지 출력
-            if ($mandatoryCat>$inputMandatoryCat ){
+            if (count($mandatoryCat)>count($inputMandatoryCat) ){
                 $res->isSuccess = FALSE;
                 $res->code = 2008;
                 $res->message = "옵션 필수선택 하세요";
@@ -130,7 +130,7 @@ try {
                 addErrorLogs($errorLogs, $res, $req);
                 return;
             }
-            if ($mandatoryCat<$inputMandatoryCat ){
+            if (count($mandatoryCat)<count($inputMandatoryCat) ){
                 $res->isSuccess = FALSE;
                 $res->code = 2009;
                 $res->message = "잘못된 옵션값을 선택했습니다.";
@@ -410,7 +410,6 @@ try {
                 addErrorLogs($errorLogs, $res, $req);
                 break;
             }
-//            $res->result=$cartInfo;
             // 로그인되어있을때 주소설정안되어있으면
             // 유저 주소정보 건물명, 주소풀네임
 
@@ -467,7 +466,21 @@ try {
 //                $i++;
 //            }
             $deliverFee=getDeliveryFee($userIdxInToken);
-            $couponPrice=getCoupon($userIdxInToken); // 최소주문금액과
+//            $couponPrice=getCoupon($userIdxInToken)['salePrice']; // 최소주문금액과 만료일
+
+            if (!empty(getCoupon($userIdxInToken)['minPrice'])){ // 최소주문액
+                if($orderPrice>=getCoupon($userIdxInToken)['minPrice']){
+                    $couponPrice=getCoupon($userIdxInToken)['salePrice'];
+                }
+                else{
+                    $couponPrice=0;
+                }
+            }
+            else{
+                $couponPrice=getCoupon($userIdxInToken)['salePrice'];
+            }
+
+
             if(empty($couponPrice)){
                 $couponPrice=0;
             }
