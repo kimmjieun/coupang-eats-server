@@ -467,7 +467,7 @@ try {
 //                $i++;
 //            }
             $deliverFee=getDeliveryFee($userIdxInToken);
-            $couponPrice=getCoupon($userIdxInToken);
+            $couponPrice=getCoupon($userIdxInToken); // 최소주문금액과
             if(empty($couponPrice)){
                 $couponPrice=0;
             }

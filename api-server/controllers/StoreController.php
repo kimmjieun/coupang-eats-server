@@ -752,6 +752,7 @@ try {
                 $res->couponInfo->couponIdx=$couponIdx;
                 if(empty($jwt)){ //$jwt로 변경
                     $res->couponInfo->coupon=number_format($couponPrice).'원 쿠폰받기';
+                    $res->couponInfo->hasCoupon='N';
                 }
                 else{ // 주석해제
                     if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
@@ -764,9 +765,11 @@ try {
                     }
                     if(isValidUserCoupon($couponIdx,$userIdxInToken)){
                         $res->couponInfo->coupon=number_format($couponPrice).'원 쿠폰받기 완료';
+                        $res->couponInfo->hasCoupon='Y';
                     }
                     else{
                         $res->couponInfo->coupon=number_format($couponPrice).'원 쿠폰받기';
+                        $res->couponInfo->hasCoupon='N';
                     }
                 }
            }
