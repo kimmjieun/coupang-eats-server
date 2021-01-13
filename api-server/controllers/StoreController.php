@@ -717,22 +717,7 @@ try {
             //주석해제
             $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
             $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
-//            if (empty($jwt)){
-//                $res->isSuccess = FALSE;
-//                $res->code = 2000;
-//                $res->message = "토큰을 입력하세요.";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                addErrorLogs($errorLogs, $res, $req);
-//                return;
-//            }
-//            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
-//                $res->isSuccess = FALSE;
-//                $res->code = 2001;
-//                $res->message = "유효하지 않은 토큰입니다.";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                addErrorLogs($errorLogs, $res, $req);
-//                return;
-//            }
+
 
             if(!isValidStore($vars['storeIdx'])){
                 $res->isSuccess = FALSE;

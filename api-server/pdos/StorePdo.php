@@ -1329,14 +1329,13 @@ function getOptMenuCategory($menuIdx,$catIdx)
     $pdo = pdoSqlConnect();
     $query = "
         select menuOptIdx,
-               case
-                   when isnull(optPrice)
-                   then menuOptName
-                       else concat(menuOptName, '(+ ',cast(FORMAT(optPrice, 0) as char), '원)')
-                           end as menuOptName,
+               menuOptName,
+               case when !isnull(optPrice)
+               then concat( '(+ ',cast(FORMAT(optPrice, 0) as char), '원)')
+               end as menuOptPrice,
                optPrice
         from MenuOption
-        where menuIdx=? and optCatIdx =? and isDeleted='N';  
+        where menuIdx=? and optCatIdx =? and isDeleted='N';
 ";
     $st = $pdo->prepare($query);
     $st->execute([$menuIdx,$catIdx]);

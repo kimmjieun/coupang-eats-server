@@ -9,6 +9,7 @@ require './pdos/CartPdo.php';
 require './pdos/PayPdo.php';
 require './pdos/CouponPdo.php';
 require './pdos/LookupPdo.php';
+require './pdos/AdminPdo.php';
 require './vendor/autoload.php';
 
 
@@ -28,15 +29,17 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
 //    $r->addRoute('GET', '/jwt', ['JWTController', 'validateJwt']);  // JWT 유효성 검사
 
     /* ******************   Test   ****************** */
-    $r->addRoute('GET', '/', ['IndexController', 'index']);
-    $r->addRoute('GET', '/users', ['IndexController', 'getUsers']);
-    $r->addRoute('GET', '/users/{userIdx}', ['IndexController', 'getUserDetail']);
-    $r->addRoute('POST', '/user', ['IndexController', 'createUser']); // 비밀번호 해싱 예시 추가
+//    $r->addRoute('GET', '/', ['IndexController', 'index']);
+//    $r->addRoute('GET', '/users', ['IndexController', 'getUsers']);
+//    $r->addRoute('GET', '/users/{userIdx}', ['IndexController', 'getUserDetail']);
+//    $r->addRoute('POST', '/user', ['IndexController', 'createUser']); // 비밀번호 해싱 예시 추가
+
+    /* ********************************* User ********************************* */
+
+    $r->addRoute('GET', '/pay-method', ['IndexController', 'getPayMethod']);
+    $r->addRoute('GET', '/order/{orderIdx}', ['IndexController', 'getPayMethod']);
 
     /* ********************************* Store ********************************* */
-  //  $r->addRoute('GET', '/stores', ['StoreController', 'getStore']);
-    // 홈화면조회
-//    $r->addRoute('GET', '/home3', ['StoreController', 'getHome3']);
     // 홈화면조회
     $r->addRoute('GET', '/home', ['StoreController', 'getHome']);
     // 매장 세부 조회
@@ -61,9 +64,9 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('POST', '/kakao-login', ['JWTController', 'createKakaoJwt']); // 바디
     // 네이버 로그인
     $r->addRoute('POST', '/naver-login', ['JWTController', 'createNaverJwt']); // 바디
-
+    // 회원 탈퇴
     $r->addRoute('GET', '/deleted-user', ['JWTController', 'deleteUser']);
-
+    // 자동 로그인
     $r->addRoute('GET', '/auto-login', ['JWTController', 'autoLogin']);
     /* ********************************* address ********************************* */
     // 주소 설정 api
@@ -76,23 +79,29 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     $r->addRoute('POST', '/newcarts', ['CartController', 'addNewCart']);
     // 카트보기
     $r->addRoute('GET', '/carts', ['CartController', 'getCart']);
-    // 주문하기
-    $r->addRoute('POST', '/order', ['CartController', 'makeOrder']);
+
     // 주문내역조회
     $r->addRoute('GET', '/order', ['CartController', 'getOrderDetail']);
 
     /* ********************************* pay ********************************* */
-    $r->addRoute('GET', '/payment', ['PayController', 'pay']);
+    $r->addRoute('GET', '/access-token', ['PayController', 'getAccessToken']);
+    // 포스트로바꿔
+    $r->addRoute('POST', '/verification', ['PayController', 'getVerification']);
+
+
+    // 주문/결제 취소하기
+    $r->addRoute('POST', '/order/Cancellation', ['PayController', 'getCancellation']);
+    // 주문/결제 하기
+    $r->addRoute('POST', '/order', ['PayController', 'makeOrder']);
+
     /* ********************************* coupon ********************************* */
     // 쿠폰받기 API
     $r->addRoute('POST', '/stores/{storeIdx}/coupon', ['CouponController', 'receiveCoupon']);
     // 쿠폰조회 API
     $r->addRoute('GET', '/coupons', ['CouponController', 'getUserCoupon']);
-    // 쿠폰조회 API
-//    $r->addRoute('GET', '/test', ['CouponController', 'test']);
+
+
     /* ********************************* lookup ********************************* */
-
-
     // 인기프랜차이즈 조회-원래방식으로
     $r->addRoute('GET', '/franchise-stores', ['LookupController', 'getFranchiseStore']);
     // 새로들어왔어요 조회-다른방식으로
@@ -102,8 +111,9 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     // 검색어로 조회
     $r->addRoute('GET', '/keyword', ['LookupController', 'getKewordStore']);
 
-
-
+    /* ********************************* admin ********************************* */
+    // 주문상태관리
+    $r->addRoute('PATCH', '/order-state', ['AdminController', 'setOrderState']);
 
 //    $r->addRoute('GET', '/users', 'get_all_users_handler');
 //    // {id} must be a number (\d+)
@@ -190,6 +200,11 @@ switch ($routeInfo[0]) {
                 $handler = $routeInfo[1][1];
                 $vars = $routeInfo[2];
                 require './controllers/CouponController.php';
+                break;
+            case 'AdminController':
+                $handler = $routeInfo[1][1];
+                $vars = $routeInfo[2];
+                require './controllers/AdminController.php';
                 break;
         }
 

@@ -498,156 +498,156 @@ try {
             break;
 
 
-        case "makeOrder":
-            http_response_code(200);
-//            $userIdxInToken=14;
-            // prod올릴때 주석해제
-            $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
-            $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
-            if (empty($jwt)){
-                $res->isSuccess = FALSE;
-                $res->code = 2000;
-                $res->message = "토큰을 입력하세요.";
-                echo json_encode($res, JSON_NUMERIC_CHECK);
-                addErrorLogs($errorLogs, $res, $req);
-                break;
-            }
-            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
-                $res->isSuccess = FALSE;
-                $res->code = 2001;
-                $res->message = "유효하지 않은 토큰입니다.";
-                echo json_encode($res, JSON_NUMERIC_CHECK);
-                addErrorLogs($errorLogs, $res, $req);
-                break;
-            }
-            // 바디값 받아오기
-            $toStore=$req->toStore;
-            $noPlastic=$req->noPlastic;
-            $deliveryReqIdx=$req->deliveryReqIdx;
-            if(empty($deliveryReqIdx)){
-                $deliveryReqIdx=1;
-            }
-            if(!empty($noPlastic)){
-                if($noPlastic!='Y'){
-                    $res->isSuccess = FALSE;
-                    $res->code = 2002;
-                    $res->message = "플라스틱제외요청은 Y로만 해주세요.";
-                    echo json_encode($res, JSON_NUMERIC_CHECK);
-                    break;
-                }
-            }
-
-            //주문금액구하기
-            $cartResult =getCartList($userIdxInToken);
-            if(empty($cartResult)){
-                $res->isSuccess = FALSE;
-                $res->code = 3000;
-                $res->message = "카트에 값이 없습니다.";
-                echo json_encode($res, JSON_NUMERIC_CHECK);
-                break;
-            }
-            $s = 0;
-            $orderPrice=0;
-            while ($s < count($cartResult)) {
-                $menuIdx= $cartResult[$s]['menuIdx'];
-                // 옵션
-                $optionResult=getOption($menuIdx,$userIdxInToken);
-                $i=0;
-                $optionList= array();
-                $optionPrice=0;
-                while ($i< count($optionResult)) {
-                    if(empty($optionResult[$i]['optPrice'])){
-                        $optionName=$optionResult[$i]['menuOptName'];
-                    }
-                    else{
-                        $optionName=$optionResult[$i]['menuOptName'].'(+'.number_format($optionResult[$i]['optPrice']).'원)';
-                    }
-                    $optionIdx=$optionResult[$i]['optIdx'];
-                    $optionPrice+=getMenuOptionPrice($optionIdx);
-                    array_push($optionList, $optionName);
-                    $i++;
-                }
-                $cartResult[$s]['option']=$optionList;
-
-                //가격계산 -> 메뉴 + 옵션가
-                $price=getMenuPrice($menuIdx);
-                $menuPrice=$price+$optionPrice;
-                $cartResult[$s]['price']=number_format($menuPrice).'원';
-                $orderPrice+=$menuPrice;
-                $s++;
-            }
-            //배달비 받아오기
-            $deliverFee=getDeliveryFee($userIdxInToken);
-            if($deliverFee==-1){
-                $deliverFee=0;
-            }
-            // 쿠폰비용 받아오기
-            $couponPrice=getCoupon($userIdxInToken);
-            if(empty($couponPrice)){
-                $couponPrice=0;
-            }
-            // 총금액
-            $totalPrice=$orderPrice+$deliverFee-$couponPrice;
-            // 결제정보 받아오기
-            $paymentIdx=getPayment($userIdxInToken)['paymentIdx'];//결제인덱스
-            if(empty($paymentIdx)){
-                $res->isSuccess = FALSE;
-                $res->code = 3001;
-                $res->message = "결제수단을 설정하세요.";
-                echo json_encode($res, JSON_NUMERIC_CHECK);
-                break;
-            }
-            // 주문 정보 넣기
-            $storeIdx=getStoreIdx($userIdxInToken)['storeIdx'];
-            //메뉴정보
-            $orderMenu=getCart($userIdxInToken);
-            if(empty($orderMenu)){
-                $res->isSuccess = FALSE;
-                $res->code = 3002;
-                $res->message = "카트에서 메뉴를 가져올 수 없습니다.";
-                echo json_encode($res, JSON_NUMERIC_CHECK);
-                break;
-            }
-            //메뉴옵션정보
-            $orderMenuOption=getCartOption($userIdxInToken);
-//            if(empty($orderMenuOption)){
+//        case "makeOrder":
+//            http_response_code(200);
+////            $userIdxInToken=14;
+//            // prod올릴때 주석해제
+//            $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
+//            $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
+//            if (empty($jwt)){
 //                $res->isSuccess = FALSE;
-//                $res->code = 3003;
-//                $res->message = "카트에서 메뉴옵션을 가져올 수 없습니다.";
+//                $res->code = 2000;
+//                $res->message = "토큰을 입력하세요.";
+//                echo json_encode($res, JSON_NUMERIC_CHECK);
+//                addErrorLogs($errorLogs, $res, $req);
+//                break;
+//            }
+//            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
+//                $res->isSuccess = FALSE;
+//                $res->code = 2001;
+//                $res->message = "유효하지 않은 토큰입니다.";
+//                echo json_encode($res, JSON_NUMERIC_CHECK);
+//                addErrorLogs($errorLogs, $res, $req);
+//                break;
+//            }
+//            // 바디값 받아오기
+//            $toStore=$req->toStore;
+//            $noPlastic=$req->noPlastic;
+//            $deliveryReqIdx=$req->deliveryReqIdx;
+//            if(empty($deliveryReqIdx)){
+//                $deliveryReqIdx=1;
+//            }
+//            if(!empty($noPlastic)){
+//                if($noPlastic!='Y'){
+//                    $res->isSuccess = FALSE;
+//                    $res->code = 2002;
+//                    $res->message = "플라스틱제외요청은 Y로만 해주세요.";
+//                    echo json_encode($res, JSON_NUMERIC_CHECK);
+//                    break;
+//                }
+//            }
+//
+//            //주문금액구하기
+//            $cartResult =getCartList($userIdxInToken);
+//            if(empty($cartResult)){
+//                $res->isSuccess = FALSE;
+//                $res->code = 3000;
+//                $res->message = "카트에 값이 없습니다.";
 //                echo json_encode($res, JSON_NUMERIC_CHECK);
 //                break;
 //            }
-            $orderState=1;
-
-
-//            //주문하기 똑같은 값으로 또 요청한다면 이미 주문했습니다? 아니야 또 주문할수있잖아
-
-            $storeInfo=getStore($userIdxInToken);
-            if(empty($storeInfo)){
-                $res->isSuccess = FALSE;
-                $res->code = 3003;
-                $res->message = "최소주문금액정보가 없습니다.";
-                echo json_encode($res, JSON_NUMERIC_CHECK);
-                break;
-            }
-            $minOrderCost=$storeInfo[0]['minOrderCost'];
-            if($totalPrice<$minOrderCost){
-                $res->isSuccess = FALSE;
-                $res->code = 3004;
-                $res->message = "최소주문금액을 맞추세요.";
-                echo json_encode($res, JSON_NUMERIC_CHECK);
-                break;
-            }
-
-            // 가격제한$orderIdx
-            $orderIdx=addOrderInfo($storeIdx,$userIdxInToken,$paymentIdx,$totalPrice,$toStore,$noPlastic,$deliveryReqIdx,$orderState,
-                $orderMenu,$orderMenuOption); //주문정보내고 인덱스얻기
-            $res->result->orderIdx =$orderIdx;
-            $res->isSuccess = TRUE;
-            $res->code = 1000;
-            $res->message = "주문하기 성공";
-            echo json_encode($res, JSON_NUMERIC_CHECK);
-            break;
+//            $s = 0;
+//            $orderPrice=0;
+//            while ($s < count($cartResult)) {
+//                $menuIdx= $cartResult[$s]['menuIdx'];
+//                // 옵션
+//                $optionResult=getOption($menuIdx,$userIdxInToken);
+//                $i=0;
+//                $optionList= array();
+//                $optionPrice=0;
+//                while ($i< count($optionResult)) {
+//                    if(empty($optionResult[$i]['optPrice'])){
+//                        $optionName=$optionResult[$i]['menuOptName'];
+//                    }
+//                    else{
+//                        $optionName=$optionResult[$i]['menuOptName'].'(+'.number_format($optionResult[$i]['optPrice']).'원)';
+//                    }
+//                    $optionIdx=$optionResult[$i]['optIdx'];
+//                    $optionPrice+=getMenuOptionPrice($optionIdx);
+//                    array_push($optionList, $optionName);
+//                    $i++;
+//                }
+//                $cartResult[$s]['option']=$optionList;
+//
+//                //가격계산 -> 메뉴 + 옵션가
+//                $price=getMenuPrice($menuIdx);
+//                $menuPrice=$price+$optionPrice;
+//                $cartResult[$s]['price']=number_format($menuPrice).'원';
+//                $orderPrice+=$menuPrice;
+//                $s++;
+//            }
+//            //배달비 받아오기
+//            $deliverFee=getDeliveryFee($userIdxInToken);
+//            if($deliverFee==-1){
+//                $deliverFee=0;
+//            }
+//            // 쿠폰비용 받아오기
+//            $couponPrice=getCoupon($userIdxInToken);
+//            if(empty($couponPrice)){
+//                $couponPrice=0;
+//            }
+//            // 총금액
+//            $totalPrice=$orderPrice+$deliverFee-$couponPrice;
+//            // 결제정보 받아오기
+//            $paymentIdx=getPayment($userIdxInToken)['paymentIdx'];//결제인덱스
+//            if(empty($paymentIdx)){
+//                $res->isSuccess = FALSE;
+//                $res->code = 3001;
+//                $res->message = "결제수단을 설정하세요.";
+//                echo json_encode($res, JSON_NUMERIC_CHECK);
+//                break;
+//            }
+//            // 주문 정보 넣기
+//            $storeIdx=getStoreIdx($userIdxInToken)['storeIdx'];
+//            //메뉴정보
+//            $orderMenu=getCart($userIdxInToken);
+//            if(empty($orderMenu)){
+//                $res->isSuccess = FALSE;
+//                $res->code = 3002;
+//                $res->message = "카트에서 메뉴를 가져올 수 없습니다.";
+//                echo json_encode($res, JSON_NUMERIC_CHECK);
+//                break;
+//            }
+//            //메뉴옵션정보
+//            $orderMenuOption=getCartOption($userIdxInToken);
+////            if(empty($orderMenuOption)){
+////                $res->isSuccess = FALSE;
+////                $res->code = 3003;
+////                $res->message = "카트에서 메뉴옵션을 가져올 수 없습니다.";
+////                echo json_encode($res, JSON_NUMERIC_CHECK);
+////                break;
+////            }
+//            $orderState=1;
+//
+//
+////            //주문하기 똑같은 값으로 또 요청한다면 이미 주문했습니다? 아니야 또 주문할수있잖아
+//
+//            $storeInfo=getStore($userIdxInToken);
+//            if(empty($storeInfo)){
+//                $res->isSuccess = FALSE;
+//                $res->code = 3003;
+//                $res->message = "최소주문금액정보가 없습니다.";
+//                echo json_encode($res, JSON_NUMERIC_CHECK);
+//                break;
+//            }
+//            $minOrderCost=$storeInfo[0]['minOrderCost'];
+//            if($totalPrice<$minOrderCost){
+//                $res->isSuccess = FALSE;
+//                $res->code = 3004;
+//                $res->message = "최소주문금액을 맞추세요.";
+//                echo json_encode($res, JSON_NUMERIC_CHECK);
+//                break;
+//            }
+//
+//            // 가격제한$orderIdx
+//            $orderIdx=addOrderInfo($storeIdx,$userIdxInToken,$paymentIdx,$totalPrice,$toStore,$noPlastic,$deliveryReqIdx,$orderState,
+//                $orderMenu,$orderMenuOption); //주문정보내고 인덱스얻기
+//            $res->result->orderIdx =$orderIdx;
+//            $res->isSuccess = TRUE;
+//            $res->code = 1000;
+//            $res->message = "주문하기 성공";
+//            echo json_encode($res, JSON_NUMERIC_CHECK);
+//            break;
 
 
         case "getOrderDetail":
@@ -672,15 +672,15 @@ try {
                 addErrorLogs($errorLogs, $res, $req);
                 break;
             }
-            $orderState = isset($_GET['orderstate']) ? $_GET['orderstate'] : '';
-            if(empty($orderState)){
+            $category = isset($_GET['category']) ? $_GET['category'] : '';
+            if(empty($category)){
                 $res->isSuccess = TRUE;
                 $res->code = 2000;
                 $res->message = "주문내역 옵션을 입력하세요(1:과거주문내역 or 2:준비중)";
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 break;
             }
-            if($orderState==1){
+            if($category==1){
                 $orderStateList=[5,6];
             }
             else{
