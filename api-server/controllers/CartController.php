@@ -767,7 +767,6 @@ try {
                 $orderList = array();
                 $orderIdx = $orderInfo[$i]['orderIdx'];
                 $orderMenuResult = getOrderMenu($orderIdx); //메뉴여러개
-//                echo $orderMenuResult.'ddd';
                 $j = 0;
                 $optionList=array();
                 while ($j < count($orderMenuResult)) {

@@ -29,8 +29,8 @@ try {
             http_response_code(200);
 
             $bootpay = BootpayApi::setConfig(
-                "59a4d32b396fa607c2e75e00",
-                "t3UENPWvsUort5WG0BFVk2+yBzmlt3UDvhDH2Uwp0oA="
+                '',
+                ''
             );
 
             $response = $bootpay->requestAccessToken();
@@ -91,15 +91,14 @@ try {
 
 
             $bootpay = BootpayApi::setConfig(
-                '59a4d32b396fa607c2e75e00',
-                't3UENPWvsUort5WG0BFVk2+yBzmlt3UDvhDH2Uwp0oA='
+                '',
+                ''
             );
 
             $response = $bootpay->requestAccessToken();
 
             if ($response->status === 200) {
-                echo '토큰받기성공';
-                $orderInfo=getOrderIdx($orderIdx);
+                $orderInfo=getOrderIdx($orderIdx); //orderState,userIdx,orderPrice
                 if(empty($orderInfo)){
                     $res->isSuccess = FALSE;
                     $res->code = 4000;
@@ -115,8 +114,9 @@ try {
                     break;
                 }
                 $name=getUserName($orderInfo[0]['userIdx']);
-                $result = $bootpay->cancel($receiptId, $orderInfo[0]['orderPrice'], $name, '단순변심');
-                //receiptId,가격,이름,취소사유-> 이값은 서버가넣는건지?
+
+                $result = $bootpay->cancel($receiptId,'',$name,'단순변심');
+                //var_dump($result);
                 // 결제 취소가 되었다면
                 if ($result->status === 200) {
                     // 주문상태 바꾸기
@@ -137,7 +137,6 @@ try {
                 }
             }
             else{
-                echo '실패';
                 $res->isSuccess = TRUE;
                 $res->code = 3001;
                 $res->message = "status가 200이 아닙니다.(액세스토큰받기실패)";
@@ -235,8 +234,7 @@ try {
 
             // 쿠폰 비용받아오기
             $couponLists=getCoupon($userIdxInToken,$storeIdx);
-//            $couponIdx=$couponLists[0]['couponIdx'];
-
+            $couponIdx=getCoupon($userIdxInToken,$storeIdx)[0]['couponIdx'];
             if (!empty($couponLists[0]['minPrice'])){ // 최소주문액
                 if($orderPrice>=$couponLists[0]['minPrice']){
                     $couponPrice=$couponLists[0]['salePrice'];
@@ -298,46 +296,25 @@ try {
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 break;
             }
-//            $res->result->storeIdx=$storeIdx;
-//            $res->result->userIdxInToken=$userIdxInToken;
-//            $res->result->paymentIdx=$paymentIdx;
-//            $res->result->totalPrice=$totalPrice;
-//            $res->result->orderState=$orderState;
-//            $res->result->orderMenu=$orderMenu;
-//            $res->result->orderMenuOption=$orderMenuOption;
-//            $res->isSuccess = FALSE;
-//            $res->code = 4004;
-//            $res->message = "주문정보조회성공";
-//            echo json_encode($res, JSON_NUMERIC_CHECK);
-//            break;
-
-//            echo 'ddd';
-
-//            require_once('autoload.php');
-//            spl_autoload_register('BootpayAutoload');
 
             $bootpay = BootpayApi::setConfig(
                 '',
                 ''
             );
 
-//            echo 'dddd2';
             $response = $bootpay->requestAccessToken();
 
-//            echo 'ddd3';
 
 
             if ($response->status === 200) {
                 $result = $bootpay->verify($receiptId);
-//                echo $result->data->price.'|'.$totalPrice;
-//                var_dump($result);
-//                return;
+                //var_dump($result);
                 // 원래 주문했던 금액이 일치하는가?
                 // 그리고 결제 상태가 완료 상태인가?
                 if ($result->data->price === $totalPrice && $result->data->status === 1) {
                     // TODO: 이곳이 상품 지급 혹은 결제 완료 처리를 하는 로직으로 사용하면 됩니다.
                     $orderIdx=addOrderInfo($storeIdx,$userIdxInToken,$paymentIdx,$totalPrice,$toStore,$noPlastic,$deliveryReqIdx,$orderState,
-                        $orderMenu,$orderMenuOption); //주문정보 주문테이블에 저장하고 인덱스얻기
+                        $orderMenu,$orderMenuOption,$couponIdx); //주문정보 주문테이블에 저장하고 인덱스얻기
                     $res->result->orderIdx =$orderIdx;
                     $res->isSuccess = TRUE;
                     $res->code = 1000;

@@ -593,8 +593,25 @@ select oi.orderIdx,
         where os.orderStateIdx = oi.orderState) as orderStateName,
        date_format(oi.orderTime,'%Y-%m-%d %H:%i') as orderTime
 from OrderInfo as oi
-where oi.isDeleted='N' and oi.userIdx = ? and oi.orderState in  (".implode(',',$orderStateList).");";
+where oi.userIdx = ? and oi.orderState in  (".implode(',',$orderStateList).");";
 
+//    $query = "
+//select oi.orderIdx,
+//       oi.storeIdx,
+//       (select s.storeName
+//        from Store as s
+//        where s.storeIdx=oi.storeIdx) as storeName,
+//      (select sp.storePhoto
+//        from StorePhoto as sp
+//        where sp.storeIdx=oi.storeIdx and sp.sequence=1) as storePhoto,
+//        concat(cast(FORMAT(oi.orderPrice, 0) as char), '원') as orderPrice,
+//       oi.orderState,
+//       (select os.orderStateName
+//        from OrderState as os
+//        where os.orderStateIdx = oi.orderState) as orderStateName,
+//       date_format(oi.orderTime,'%Y-%m-%d %H:%i') as orderTime
+//from OrderInfo as oi
+//where oi.isDeleted='N' and oi.userIdx = ? and oi.orderState in  (".implode(',',$orderStateList).");";
     $st = $pdo->prepare($query);
     $st->execute([$userIdxInToken]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
@@ -616,8 +633,14 @@ select (select menuIdx from Menu as m where m.isDeleted='N' and o.menuIdx=m.menu
        o.quantity,
        (select menuName from Menu as m where m.isDeleted='N' and o.menuIdx=m.menuIdx) as menuName
 from OrderDetail as o
-where o.isDeleted='N' and o.orderIdx= ?; ";
+where o.orderIdx= ?; ";
 
+//    $query = "
+//select (select menuIdx from Menu as m where m.isDeleted='N' and o.menuIdx=m.menuIdx) as menuIdx,
+//       o.quantity,
+//       (select menuName from Menu as m where m.isDeleted='N' and o.menuIdx=m.menuIdx) as menuName
+//from OrderDetail as o
+//where o.isDeleted='N' and o.orderIdx= ?; ";
     $st = $pdo->prepare($query);
     $st->execute([$orderIdx]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
@@ -637,8 +660,13 @@ function getOrderMenuOption($orderIdx,$menuIdx)
 select oo.menuOptIdx,
        (select menuOptName from MenuOption as mo where mo.isDeleted='N' and oo.menuOptIdx=mo.menuOptIdx) as menuOptName
 from OrderOptionDetail as oo
-where oo.isDeleted='N' and oo.orderIdx= ? and oo.menuIdx=?;;";
+where oo.orderIdx= ? and oo.menuIdx=?;";
 
+//    $query = "
+//select oo.menuOptIdx,
+//       (select menuOptName from MenuOption as mo where mo.isDeleted='N' and oo.menuOptIdx=mo.menuOptIdx) as menuOptName
+//from OrderOptionDetail as oo
+//where oo.isDeleted='N' and oo.orderIdx= ? and oo.menuIdx=?;";
     $st = $pdo->prepare($query);
     $st->execute([$orderIdx,$menuIdx]);
     $st->setFetchMode(PDO::FETCH_ASSOC);

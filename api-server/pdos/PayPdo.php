@@ -24,24 +24,25 @@ function deleteOrder($orderIdx)
 {
     $pdo = pdoSqlConnect();
 
-
+// update OrderInfo set orderState=6 where orderIdx=?;
     $queryDeleteOrder="update OrderInfo set isDeleted='Y' where isDeleted='N' and orderIdx=?;";
     $queryDeleteOrderDetail="update OrderDetail set isDeleted='Y' where isDeleted='N' and orderIdx=?;";
     $queryDeleteOrderOptionDetail="update OrderDetail set isDeleted='Y' where isDeleted='N' and orderIdx=?;";
-
+    $queryUpdateOrderState="update OrderInfo set orderState=6 where orderIdx=?;";
 
     try {
 
         $st1 = $pdo->prepare($queryDeleteOrder);
         $st2 = $pdo->prepare($queryDeleteOrderDetail);
         $st3 = $pdo->prepare($queryDeleteOrderOptionDetail);
+        $st4 = $pdo->prepare($queryUpdateOrderState);
 
         $pdo->beginTransaction();
 
         $st1->execute([$orderIdx]);
         $st2->execute([$orderIdx]);
         $st3->execute([$orderIdx]);
-
+        $st4->execute([$orderIdx]);
 
         $pdo->commit();
     }
@@ -57,7 +58,7 @@ function deleteOrder($orderIdx)
     $st1 = null;
     $st2 = null;
     $st3 = null;
-
+    $st4 = null;
 
 }
 
@@ -81,7 +82,7 @@ select userName from UserInfo where isDeleted='N' and userIdx=?";
 
 
 function addOrderInfo($storeIdx,$userIdxInToken,$paymentIdx,$totalPrice,$toStore,$noPlastic,$deliveryReqIdx,$orderState,
-                      $orderMenu,$orderMenuOption)
+                      $orderMenu,$orderMenuOption,$couponIdx)
 {
     $pdo = pdoSqlConnect();
 
@@ -91,8 +92,9 @@ insert into OrderInfo (storeIdx,userIdx,paymentIdx,orderPrice,toStore,noPlastic,
 values(?,?,?,?,?,if(isnull(?),'N',?),?,?);";
     $queryOrderMenu="insert into OrderDetail (orderIdx,menuIdx,quantity) values(?,?,?);";
     $queryOrderMenuOption="insert into OrderOptionDetail (orderIdx,menuIdx,menuOptIdx) values(?,?,?);";
-    $querydeleteCart="update Cart set isDeleted='Y' where userIdx=? and isDeleted='N';";
-    $querydeleteCartOption="update OptionCart set isDeleted='Y' where userIdx=? and isDeleted='N';";
+    $queryDeleteCart="update Cart set isDeleted='Y' where userIdx=? and isDeleted='N';";
+    $queryDeleteCartOption="update OptionCart set isDeleted='Y' where userIdx=? and isDeleted='N';";
+    $queryDeleteUserCoupon="update UserCoupon set isDeleted='Y' where couponIdx=? and userIdx=?;";
 
 
 
@@ -101,8 +103,9 @@ values(?,?,?,?,?,if(isnull(?),'N',?),?,?);";
         $st1 = $pdo->prepare($qurtyOrderInfo);
         $st2 = $pdo->prepare($queryOrderMenu);
         $st3 = $pdo->prepare($queryOrderMenuOption);
-        $st4 = $pdo->prepare($querydeleteCart);
-        $st5 = $pdo->prepare($querydeleteCartOption);
+        $st4 = $pdo->prepare($queryDeleteCart);
+        $st5 = $pdo->prepare($queryDeleteCartOption);
+        $st6 = $pdo->prepare($queryDeleteUserCoupon);
         $pdo->beginTransaction();
 
         $st1->execute([$storeIdx,$userIdxInToken,$paymentIdx,$totalPrice,
@@ -122,6 +125,9 @@ values(?,?,?,?,?,if(isnull(?),'N',?),?,?);";
                 $j++;
             }
             $st5->execute([$userIdxInToken]);
+        }
+        if(!empty($couponIdx)){
+            $st6->execute([$couponIdx,$userIdxInToken]);
         }
 
 
@@ -144,6 +150,7 @@ values(?,?,?,?,?,if(isnull(?),'N',?),?,?);";
     $st3 = null;
     $st4 = null;
     $st5 = null;
+    $st6 = null;
     $pdo = null;
     return $orderIdx;
 
