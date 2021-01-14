@@ -467,22 +467,10 @@ try {
 //            }
             $deliverFee=getDeliveryFee($userIdxInToken);
 //            $couponPrice=getCoupon($userIdxInToken)['salePrice']; // 최소주문금액과 만료일
-
-            if (!empty(getCoupon($userIdxInToken)['minPrice'])){ // 최소주문액
-                if($orderPrice>=getCoupon($userIdxInToken)['minPrice']){
-                    $couponPrice=getCoupon($userIdxInToken)['salePrice'];
-                }
-                else{
-                    $couponPrice=0;
-                }
-            }
-            else{
-                $couponPrice=getCoupon($userIdxInToken)[0]['salePrice'];
-            }
-
-//            if (!empty(getCoupon($userIdxInToken)[0]['minPrice'])){ // 최소주문액
-//                if($orderPrice>=getCoupon($userIdxInToken)[0]['minPrice']){
-//                    $couponPrice=getCoupon($userIdxInToken)[0]['salePrice'];
+//
+//            if (!empty(getCoupon($userIdxInToken)['minPrice'])){ // 최소주문액
+//                if($orderPrice>=getCoupon($userIdxInToken)['minPrice']){
+//                    $couponPrice=getCoupon($userIdxInToken)['salePrice'];
 //                }
 //                else{
 //                    $couponPrice=0;
@@ -491,17 +479,74 @@ try {
 //            else{
 //                $couponPrice=getCoupon($userIdxInToken)[0]['salePrice'];
 //            }
+//
+////            if (!empty(getCoupon($userIdxInToken)[0]['minPrice'])){ // 최소주문액
+////                if($orderPrice>=getCoupon($userIdxInToken)[0]['minPrice']){
+////                    $couponPrice=getCoupon($userIdxInToken)[0]['salePrice'];
+////                }
+////                else{
+////                    $couponPrice=0;
+////                }
+////            }
+////            else{
+////                $couponPrice=getCoupon($userIdxInToken)[0]['salePrice'];
+////            }
+//
+//
+//            if(empty($couponPrice)){
+//                $couponPrice=0;
+//            }
+            $storeInfo=getStore($userIdxInToken);
+            $res->deliveryaddress=getDeliveryAddress($userIdxInToken);
+            $res->storeIdx=$storeInfo[0]['storeIdx'];
+            $res->storeName=$storeInfo[0]['storeName'];
+            $res->minOrderCost=number_format($storeInfo[0]['minOrderCost']).'원';
+
+            if ($orderPrice<$storeInfo[0]['minOrderCost']){
+                $res->minOrderCost=number_format($storeInfo[0]['minOrderCost']).'원';
+            }
+            else{
+                $res->minOrderCost=null;
+            }
+
+            $res->cartList= $cartResult; // 수량, 메뉴이름, 옵션이름(리스트로),총가격-서브쿼리
+
+            // 할인쿠폰
+            // 사용가능 쿠폰 갯수 세주기 거기서 가장 상위에 있는거 적용시키기
+            //
+
+            // 쿠폰개수
+            $couponCount=getCouponCount($userIdxInToken,$storeInfo[0]['storeIdx']);
+
+            $couponLists=getCoupon($userIdxInToken,$storeInfo[0]['storeIdx']);
+
+            if (!empty($couponLists[0]['minPrice'])){ // 최소주문액
+                if($orderPrice>=$couponLists[0]['minPrice']){
+                    $couponPrice=$couponLists[0]['salePrice'];
+                }
+                else{
+                    $couponPrice=0;
+                }
+            }
+            else{
+                $couponPrice=$couponLists[0]['salePrice'];
+            }
 
 
             if(empty($couponPrice)){
                 $couponPrice=0;
             }
-            $storeInfo=getStore($userIdxInToken);
 
-            $res->deliveryaddress=getDeliveryAddress($userIdxInToken);
-            $res->storeName=$storeInfo[0]['storeName'];
-            $res->minOrderCost=number_format($storeInfo[0]['minOrderCost']).'원';
-            $res->cartList= $cartResult; // 수량, 메뉴이름, 옵션이름(리스트로),총가격-서브쿼리
+            $res->coupon->couponCount=$couponCount;
+            if (!empty($couponPrice)){
+                $res->coupon->couponPrice='-'.number_format($couponPrice).'원';
+            }
+            else{
+                $res->coupon->couponPrice=null;
+            }
+
+
+
             $res->payPrice->orderPrice= number_format($orderPrice).'원';
             if($deliverFee==-1){
                 $res->payPrice->deliveryFee=0;

@@ -240,6 +240,7 @@ function getStore($userIdxInToken)
     $pdo = pdoSqlConnect();
     $query = "
 select distinct
+(select s.storeIdx from Store as s where s.storeIdx=c.storeIdx ) as storeIdx,
 (select s.storeName from Store as s where s.storeIdx=c.storeIdx ) as storeName,
 (select s.minOrderCost from Store as s where s.storeIdx=c.storeIdx ) as minOrderCost
 from Cart as c
@@ -376,24 +377,56 @@ where c.isDeleted='N' and c.userIdx=?;";
 
     return $res;
 }
-
-function getCoupon($userIdxInToken)
+function getCouponCount($userIdxInToken,$storeIdx)
 {
     $pdo = pdoSqlConnect();
     $query = "
-select salePrice,minPrice
-from Coupon
-where couponIdx=(select sc.couponIdx
-                    from StoreCoupon as sc
-                    join UserCoupon uc on sc.couponIdx = uc.couponIdx
-                    where sc.storeIdx=(select distinct
-                                        (select storeIdx from Store as s where s.storeIdx=c.storeIdx ) as storeName
-                                        from Cart as c
-                                        where c.isDeleted='N' and c.userIdx=? and uc.isDeleted='N')
-                          and uc.userIdx=?) and isDeleted='N'and date(expiredAt) >= date(now());";
+select count(*) as couponCount
+from
+    ((select couponIdx,salePrice,minPrice
+    from Coupon
+    where isDeleted='N'and date(expiredAt) >= date(now())
+            and couponIdx =(select uc.couponIdx
+                            from UserCoupon as uc
+                            join StoreCoupon as sc on sc.couponIdx = uc.couponIdx
+                            where  uc.isDeleted= 'N' and uc.userIdx= ? and sc.storeIdx =?))
+    union
+    (select couponIdx,salePrice,minPrice
+    from Coupon
+    where isDeleted='N'and date(expiredAt) >= date(now())
+            and couponIdx in(select couponIdx from UserCoupon where isDeleted='N' and userIdx= ?))) as Coupon;";
 
     $st = $pdo->prepare($query);
-    $st->execute([$userIdxInToken,$userIdxInToken]);
+    $st->execute([$userIdxInToken,$storeIdx,$userIdxInToken]);
+    $st->setFetchMode(PDO::FETCH_ASSOC);
+    $res = $st->fetchColumn();
+
+    $st = null;
+    $pdo = null;
+
+
+    return $res;
+}
+
+function getCoupon($userIdxInToken,$storeIdx)
+{
+    $pdo = pdoSqlConnect();
+    $query = "
+(select couponIdx,salePrice,minPrice
+    from Coupon
+    where isDeleted='N'and date(expiredAt) >= date(now())
+            and couponIdx =(select uc.couponIdx
+                            from UserCoupon as uc
+                            join StoreCoupon as sc on sc.couponIdx = uc.couponIdx
+                            where  uc.isDeleted= 'N' and uc.userIdx= ? and sc.storeIdx =?))
+union
+(select couponIdx,salePrice,minPrice
+from Coupon
+where isDeleted='N'and date(expiredAt) >= date(now()) and isEatsCoupon='Y'
+        and couponIdx in (select couponIdx from UserCoupon where isDeleted='N' and userIdx= ?));";
+
+    $st = $pdo->prepare($query);
+    $st->execute([$userIdxInToken,$storeIdx,$userIdxInToken]);
     $st->setFetchMode(PDO::FETCH_ASSOC);
     $res = $st->fetchAll();
 
