@@ -43,7 +43,6 @@ try {
 
         case "getHome":
             http_response_code(200);
-//            $userIdxInToken=14;
             $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
             $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
             $latitude = $_GET['latitude'];
@@ -54,14 +53,9 @@ try {
             $deliveryfee = $_GET['deliveryfee'];
             $mincost = $_GET['mincost'];
             $coupon = $_GET['coupon'];
-//            $keyword = $_GET['keyword'];
-//            if(empty($keyword)){
-//                $keyword='';
-//            }
+
             if (empty($jwt)){
-//                $latitude = $_GET['latitude'];
-//                $longitude = $_GET['longitude'];
-//                $address= $_GET['address'];
+
                 if(empty($latitude) | empty($longitude) | empty($address)){
                     $res->isSuccess = FALSE;
                     $res->code = 2010;
@@ -71,11 +65,6 @@ try {
                 }
                 $latitude = floatval($latitude);
                 $longitude =floatval($longitude);
-//                $sort = $_GET['sort'];
-//                $cheetah = $_GET['cheetah'];
-//                $deliveryfee = $_GET['deliveryfee'];
-//                $mincost = $_GET['mincost'];
-//                $coupon = $_GET['coupon'];
 
                 if (is_string($sort)) {
                     if (!empty((int)$sort)) {
@@ -91,9 +80,7 @@ try {
                 if (is_string($deliveryfee)) {
                     if (!empty((int)$deliveryfee)) {
                         $deliveryfee = (int)$deliveryfee;
-//                    echo 'int'.$deliveryfee;
                     } else {
-//                    echo 'string'.$deliveryfee;
                         $res->isSuccess = FALSE;
                         $res->code = 2003;
                         $res->message = "맞지않는데이터타입(deliveryfee)";
@@ -104,9 +91,7 @@ try {
                 if (is_string($mincost)) {
                     if (!empty((int)$mincost)) {
                         $mincost = (int)$mincost;
-//                    echo 'int'.$mincost;
                     } else {
-//                    echo 'string'.$mincost;
                         $res->isSuccess = FALSE;
                         $res->code = 2004;
                         $res->message = "맞지않는데이터타입(mincost)";
@@ -162,13 +147,11 @@ try {
                     echo json_encode($res, JSON_NUMERIC_CHECK);
                     break;
                 }
-//            echo '성공';
-//            break;
-                //4개 한번에 넣어서 할수있게
 
-                if (empty($sort)|$sort==1) { // 추천순
+
+                if (empty($sort)|$sort==1) { // 추천순=배달요금저렴한순+주문많은순
                     if ($coupon = 'Y' && !empty($coupon)) {
-                        if ($deliveryfee == -1) {
+                        if ($deliveryfee == -1) { // -1==무료배달
                             $storeIdxList = array();
                             $queryResult = getOrderByRecommend1($cheetah, $mincost);
                             $s = 0;
@@ -402,9 +385,7 @@ try {
                 if (is_string($sort)) {
                     if (!empty((int)$sort)) {
                         $sort = (int)$sort;
-//                    echo 'int'.$sort;
                     } else {
-//                    echo 'string'.$sort;
                         $res->isSuccess = FALSE;
                         $res->code = 2002;
                         $res->message = "맞지않는데이터타입(sort)";
@@ -415,9 +396,7 @@ try {
                 if (is_string($deliveryfee)) {
                     if (!empty((int)$deliveryfee)) {
                         $deliveryfee = (int)$deliveryfee;
-//                    echo 'int'.$deliveryfee;
                     } else {
-//                    echo 'string'.$deliveryfee;
                         $res->isSuccess = FALSE;
                         $res->code = 2003;
                         $res->message = "맞지않는데이터타입(deliveryfee)";
@@ -428,9 +407,7 @@ try {
                 if (is_string($mincost)) {
                     if (!empty((int)$mincost)) {
                         $mincost = (int)$mincost;
-//                    echo 'int'.$mincost;
                     } else {
-//                    echo 'string'.$mincost;
                         $res->isSuccess = FALSE;
                         $res->code = 2004;
                         $res->message = "맞지않는데이터타입(mincost)";

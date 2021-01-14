@@ -2,6 +2,8 @@
 require 'function.php';
 require 'BootpayApi.php';
 //require 'Singleton.php';
+require_once('autoload.php');
+spl_autoload_register('BootpayAutoload');
 use Bootpay\Rest\BootpayApi;
 
 const JWT_SECRET_KEY = "TEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEYTEST_KEY";
@@ -43,54 +45,6 @@ try {
             echo json_encode($res, JSON_NUMERIC_CHECK);
             break;
 
-//        case "getVerification":
-//            http_response_code(200);
-//            /*
-//             * 결제 검증 관련 예제입니다.
-//             */
-//            require_once('autoload.php');
-//            spl_autoload_register('BootpayAutoload');
-//
-////            use Bootpay\Rest\BootpayApi;
-//
-//            // 헤더에 안넣어도 될듯
-////            $accessToken = $_SERVER['HTTP_X_ACCESS_TOKEN'];
-////            $accessToken = $req->accessToken;
-////            $receiptId = '주문번호';
-//            $receiptId = $req->receiptId;
-//            echo 'receiptId:'.$receiptId;
-//            $bootpay = BootpayApi::setConfig(
-//                '59a4d32b396fa607c2e75e00',
-//                't3UENPWvsUort5WG0BFVk2+yBzmlt3UDvhDH2Uwp0oA='
-//            );
-//
-//            $response = $bootpay->requestAccessToken();
-//
-//            // Token이 발행되면 그 이후에 verify 처리 한다.
-//            if ($response->status === 200) {
-//                $token = $response->data->token;
-//            }
-//
-//            if ($response->status === 200) {
-//
-//                $result = $bootpay->verify($receiptId);
-////                var_dump($result);
-//                // 원래 주문했던 금액이 일치하는가?
-//                // 그리고 결제 상태가 완료 상태인가?
-//                if ($result->data->price === price && $result->data->status === 1) {
-//                    // TODO: 이곳이 상품 지급 혹은 결제 완료 처리를 하는 로직으로 사용하면 됩니다.
-//                }
-//            }
-//
-//
-//            // 결제금액 가져오기
-//
-//            $res->isSuccess = TRUE;
-//            $res->code = 1000;
-//            $res->message = "결제검증하기 성공";
-//            echo json_encode($res, JSON_NUMERIC_CHECK);
-//            break;
-
 
         case "getCancellation":
             http_response_code(200);
@@ -106,7 +60,7 @@ try {
                 addErrorLogs($errorLogs, $res, $req);
                 break;
             }
-            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
+            if (!isValidJWT($jwt, JWT_SECRET_KEY)) {
                 $res->isSuccess = FALSE;
                 $res->code = 2001;
                 $res->message = "유효하지 않은 토큰입니다.";
@@ -114,7 +68,7 @@ try {
                 addErrorLogs($errorLogs, $res, $req);
                 break;
             }
-            if (empty($receiptId)) { // function.php 에 구현
+            if (empty($receiptId)) {
                 $res->isSuccess = FALSE;
                 $res->code = 2002;
                 $res->message = "receiptId를 입력하세요";
@@ -122,10 +76,10 @@ try {
                 addErrorLogs($errorLogs, $res, $req);
                 break;
             }
-            if (empty($orderIdx)) { // function.php 에 구현
+            if (empty($orderIdx)) {
                 $res->isSuccess = FALSE;
                 $res->code = 2003;
-                $res->message = "2";
+                $res->message = "주문인덱스를 입력하세요.";
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 addErrorLogs($errorLogs, $res, $req);
                 break;
@@ -144,8 +98,7 @@ try {
             $response = $bootpay->requestAccessToken();
 
             if ($response->status === 200) {
-                // 결제취소 버튼하나 유저에게 주문인덱스가 있어
-                // 주문인덱스의 상태가ㅏ 1이 아닐경우
+                echo '토큰받기성공';
                 $orderInfo=getOrderIdx($orderIdx);
                 if(empty($orderInfo)){
                     $res->isSuccess = FALSE;
@@ -161,9 +114,9 @@ try {
                     echo json_encode($res, JSON_NUMERIC_CHECK);
                     break;
                 }
-                // 여기 뭐넣어야하는지
                 $name=getUserName($orderInfo[0]['userIdx']);
                 $result = $bootpay->cancel($receiptId, $orderInfo[0]['orderPrice'], $name, '단순변심');
+                //receiptId,가격,이름,취소사유-> 이값은 서버가넣는건지?
                 // 결제 취소가 되었다면
                 if ($result->status === 200) {
                     // 주문상태 바꾸기
@@ -184,17 +137,23 @@ try {
                 }
             }
             else{
+                echo '실패';
                 $res->isSuccess = TRUE;
                 $res->code = 3001;
-                $res->message = "status가 200이 아닙니다.";
+                $res->message = "status가 200이 아닙니다.(액세스토큰받기실패)";
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 break;
             }
 
+
         case "makeOrder":
             http_response_code(200);
-//            $userIdxInToken=14;
-            // prod올릴때 주석해제
+            // 바디값 받아오기
+            $toStore=$req->toStore;
+            $noPlastic=$req->noPlastic;
+            $deliveryReqIdx=$req->deliveryReqIdx;
+            $receiptId = $req->receiptId;
+
             $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
             $userIdxInToken = getDataByJWToken($jwt,JWT_SECRET_KEY)->userIdx;
             if (empty($jwt)){
@@ -205,7 +164,7 @@ try {
                 addErrorLogs($errorLogs, $res, $req);
                 break;
             }
-            if (!isValidJWT($jwt, JWT_SECRET_KEY)) { // function.php 에 구현
+            if (!isValidJWT($jwt, JWT_SECRET_KEY)) {
                 $res->isSuccess = FALSE;
                 $res->code = 2001;
                 $res->message = "유효하지 않은 토큰입니다.";
@@ -213,10 +172,7 @@ try {
                 addErrorLogs($errorLogs, $res, $req);
                 break;
             }
-            // 바디값 받아오기
-            $toStore=$req->toStore;
-            $noPlastic=$req->noPlastic;
-            $deliveryReqIdx=$req->deliveryReqIdx;
+
             if(empty($deliveryReqIdx)){
                 $deliveryReqIdx=1;
             }
@@ -274,11 +230,30 @@ try {
             if($deliverFee==-1){
                 $deliverFee=0;
             }
-            // 쿠폰비용 받아오기
-            $couponPrice=getCoupon($userIdxInToken);
+            // 주문 정보 넣기
+            $storeIdx=getStoreIdx($userIdxInToken)['storeIdx'];
+
+            // 쿠폰 비용받아오기
+            $couponLists=getCoupon($userIdxInToken,$storeIdx);
+//            $couponIdx=$couponLists[0]['couponIdx'];
+
+            if (!empty($couponLists[0]['minPrice'])){ // 최소주문액
+                if($orderPrice>=$couponLists[0]['minPrice']){
+                    $couponPrice=$couponLists[0]['salePrice'];
+                }
+                else{
+                    $couponPrice=0;
+                }
+            }
+            else{
+                $couponPrice=$couponLists[0]['salePrice'];
+            }
+
+
             if(empty($couponPrice)){
                 $couponPrice=0;
             }
+
             // 총금액
             $totalPrice=$orderPrice+$deliverFee-$couponPrice;
             // 결제정보 받아오기
@@ -290,8 +265,7 @@ try {
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 break;
             }
-            // 주문 정보 넣기
-            $storeIdx=getStoreIdx($userIdxInToken)['storeIdx'];
+
             //메뉴정보
             $orderMenu=getCart($userIdxInToken);
             if(empty($orderMenu)){
@@ -303,17 +277,10 @@ try {
             }
             //메뉴옵션정보
             $orderMenuOption=getCartOption($userIdxInToken);
-//            if(empty($orderMenuOption)){
-//                $res->isSuccess = FALSE;
-//                $res->code = 3003;
-//                $res->message = "카트에서 메뉴옵션을 가져올 수 없습니다.";
-//                echo json_encode($res, JSON_NUMERIC_CHECK);
-//                break;
-//            }
+
             $orderState=1;
 
 
-//            //주문하기 똑같은 값으로 또 요청한다면 이미 주문했습니다? 아니야 또 주문할수있잖아
 
             $storeInfo=getStore($userIdxInToken);
             if(empty($storeInfo)){
@@ -331,42 +298,46 @@ try {
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 break;
             }
+//            $res->result->storeIdx=$storeIdx;
+//            $res->result->userIdxInToken=$userIdxInToken;
+//            $res->result->paymentIdx=$paymentIdx;
+//            $res->result->totalPrice=$totalPrice;
+//            $res->result->orderState=$orderState;
+//            $res->result->orderMenu=$orderMenu;
+//            $res->result->orderMenuOption=$orderMenuOption;
+//            $res->isSuccess = FALSE;
+//            $res->code = 4004;
+//            $res->message = "주문정보조회성공";
+//            echo json_encode($res, JSON_NUMERIC_CHECK);
+//            break;
 
-            require_once('autoload.php');
-            spl_autoload_register('BootpayAutoload');
+//            echo 'ddd';
 
+//            require_once('autoload.php');
+//            spl_autoload_register('BootpayAutoload');
 
-            $receiptId = $req->receiptId;
-            echo 'receiptId:'.$receiptId;
             $bootpay = BootpayApi::setConfig(
-                '59a4d32b396fa607c2e75e00',
-                't3UENPWvsUort5WG0BFVk2+yBzmlt3UDvhDH2Uwp0oA='
+                '',
+                ''
             );
 
+//            echo 'dddd2';
             $response = $bootpay->requestAccessToken();
 
-            // Token이 발행되면 그 이후에 verify 처리 한다.
-            if ($response->status === 200) {
-                $token = $response->data->token;
-            }
-            else{
-                $res->isSuccess = FALSE;
-                $res->code = 3000;
-                $res->message = "부트페이 access token 발행 실패";
-                echo json_encode($res, JSON_NUMERIC_CHECK);
-                break;
-            }
+//            echo 'ddd3';
+
 
             if ($response->status === 200) {
-
                 $result = $bootpay->verify($receiptId);
+//                echo $result->data->price.'|'.$totalPrice;
 //                var_dump($result);
+//                return;
                 // 원래 주문했던 금액이 일치하는가?
                 // 그리고 결제 상태가 완료 상태인가?
                 if ($result->data->price === $totalPrice && $result->data->status === 1) {
                     // TODO: 이곳이 상품 지급 혹은 결제 완료 처리를 하는 로직으로 사용하면 됩니다.
                     $orderIdx=addOrderInfo($storeIdx,$userIdxInToken,$paymentIdx,$totalPrice,$toStore,$noPlastic,$deliveryReqIdx,$orderState,
-                        $orderMenu,$orderMenuOption); //주문정보내고 인덱스얻기
+                        $orderMenu,$orderMenuOption); //주문정보 주문테이블에 저장하고 인덱스얻기
                     $res->result->orderIdx =$orderIdx;
                     $res->isSuccess = TRUE;
                     $res->code = 1000;
@@ -385,7 +356,7 @@ try {
             else{
                 $res->isSuccess = TRUE;
                 $res->code = 3002;
-                $res->message = "status가 200이 아닙니다.(검증실패)";
+                $res->message = "부트페이 access token 발행 실패";
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 break;
             }

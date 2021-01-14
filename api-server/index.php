@@ -37,7 +37,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
     /* ********************************* User ********************************* */
 
     $r->addRoute('GET', '/pay-method', ['IndexController', 'getPayMethod']);
-    $r->addRoute('GET', '/order/{orderIdx}', ['IndexController', 'getPayMethod']);
+//    $r->addRoute('GET', '/order/{orderIdx}', ['IndexController', 'getPayMethod']);
 
     /* ********************************* Store ********************************* */
     // 홈화면조회
@@ -90,7 +90,7 @@ $dispatcher = FastRoute\simpleDispatcher(function (FastRoute\RouteCollector $r) 
 
 
     // 주문/결제 취소하기
-    $r->addRoute('POST', '/order/Cancellation', ['PayController', 'getCancellation']);
+    $r->addRoute('POST', '/order/cancellation', ['PayController', 'getCancellation']);
     // 주문/결제 하기
     $r->addRoute('POST', '/order', ['PayController', 'makeOrder']);
 
