@@ -477,8 +477,20 @@ try {
                 }
             }
             else{
-                $couponPrice=getCoupon($userIdxInToken)['salePrice'];
+                $couponPrice=getCoupon($userIdxInToken)[0]['salePrice'];
             }
+
+//            if (!empty(getCoupon($userIdxInToken)[0]['minPrice'])){ // 최소주문액
+//                if($orderPrice>=getCoupon($userIdxInToken)[0]['minPrice']){
+//                    $couponPrice=getCoupon($userIdxInToken)[0]['salePrice'];
+//                }
+//                else{
+//                    $couponPrice=0;
+//                }
+//            }
+//            else{
+//                $couponPrice=getCoupon($userIdxInToken)[0]['salePrice'];
+//            }
 
 
             if(empty($couponPrice)){
@@ -500,6 +512,9 @@ try {
             // 쿠폰부분다시
             if (!empty($couponPrice)){
                 $res->payPrice->couponPrice='-'.number_format($couponPrice).'원';
+            }
+            else{
+                $res->payPrice->couponPrice=null;
             }
             $res->payPrice->TotalPrice= number_format($orderPrice+$deliverFee-$couponPrice).'원';
             $res->payment=getPayment($userIdxInToken);

@@ -389,7 +389,7 @@ where couponIdx=(select sc.couponIdx
                     where sc.storeIdx=(select distinct
                                         (select storeIdx from Store as s where s.storeIdx=c.storeIdx ) as storeName
                                         from Cart as c
-                                        where c.isDeleted='N' and c.userIdx=?)
+                                        where c.isDeleted='N' and c.userIdx=? and uc.isDeleted='N')
                           and uc.userIdx=?) and isDeleted='N'and date(expiredAt) >= date(now());";
 
     $st = $pdo->prepare($query);
