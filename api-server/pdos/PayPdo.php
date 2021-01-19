@@ -20,11 +20,11 @@ select orderState,userIdx,orderPrice from OrderInfo where isDeleted = 'N' and or
     return $res;
 }
 
+
 function deleteOrder($orderIdx)
 {
     $pdo = pdoSqlConnect();
 
-// update OrderInfo set orderState=6 where orderIdx=?;
     $queryDeleteOrder="update OrderInfo set isDeleted='Y' where isDeleted='N' and orderIdx=?;";
     $queryDeleteOrderDetail="update OrderDetail set isDeleted='Y' where isDeleted='N' and orderIdx=?;";
     $queryDeleteOrderOptionDetail="update OrderDetail set isDeleted='Y' where isDeleted='N' and orderIdx=?;";
@@ -49,9 +49,7 @@ function deleteOrder($orderIdx)
     catch (PDOException $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollback();
-            // If we got here our two data updates are not in the database
         }
-        //throw $e;
         return $e->getMessage();
     }
 
@@ -61,6 +59,9 @@ function deleteOrder($orderIdx)
     $st4 = null;
 
 }
+
+
+
 
 function getUserName($userIdx)
 {
@@ -102,10 +103,9 @@ function addOrderInfo($storeIdx,$userIdxInToken,$paymentIdx,$totalPrice,$toStore
 {
     $pdo = pdoSqlConnect();
 
-    // 여기부터
     $qurtyOrderInfo="
-insert into OrderInfo (storeIdx,userIdx,paymentIdx,orderPrice,toStore,noPlastic,deliveryReqIdx,orderState,receiptId)
-values(?,?,?,?,?,if(isnull(?),'N',?),?,?,?);";
+    insert into OrderInfo (storeIdx,userIdx,paymentIdx,orderPrice,toStore,noPlastic,deliveryReqIdx,orderState,receiptId)
+    values(?,?,?,?,?,if(isnull(?),'N',?),?,?,?);";
     $queryOrderMenu="insert into OrderDetail (orderIdx,menuIdx,quantity) values(?,?,?);";
     $queryOrderMenuOption="insert into OrderOptionDetail (orderIdx,menuIdx,menuOptIdx) values(?,?,?);";
     $queryDeleteCart="update Cart set isDeleted='Y' where userIdx=? and isDeleted='N';";
@@ -155,9 +155,7 @@ values(?,?,?,?,?,if(isnull(?),'N',?),?,?,?);";
     catch (PDOException $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollback();
-            // If we got here our two data updates are not in the database
         }
-        //throw $e;
         return $e->getMessage();
     }
 

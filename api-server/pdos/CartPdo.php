@@ -593,7 +593,8 @@ select oi.orderIdx,
         where os.orderStateIdx = oi.orderState) as orderStateName,
        date_format(oi.orderTime,'%Y-%m-%d %H:%i') as orderTime
 from OrderInfo as oi
-where oi.userIdx = ? and oi.orderState in  (".implode(',',$orderStateList).");";
+where oi.userIdx = ? and oi.orderState in  (".implode(',',$orderStateList).")
+order by oi.createdAt desc;";
 
 //    $query = "
 //select oi.orderIdx,

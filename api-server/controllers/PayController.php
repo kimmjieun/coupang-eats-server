@@ -200,7 +200,10 @@ try {
                 '60001de55b294800272a1a79',
                 'vm6Lg0TQZSzo6mEzx7Lkwg1LFSM7p/05NUYvJyLdMuw='
             );
-
+//            $bootpay = BootpayApi::setConfig(
+//                '[[ application_id ]]',
+//                '[[ private_key ]]'
+//            );
             $response = $bootpay->requestAccessToken();
             if ($response->status === 200) {
                 $result = $bootpay->verify($receiptId);
@@ -234,7 +237,6 @@ try {
 
         case "getCancellation":
             http_response_code(200);
-//            $receiptId=$req->receiptId;
             $orderIdx=$req->orderIdx;
             $receiptId = getReceiptId($orderIdx);
             $jwt = $_SERVER['HTTP_X_ACCESS_TOKEN'];
@@ -277,15 +279,18 @@ try {
             spl_autoload_register('BootpayAutoload');
 
 
+//            $bootpay = BootpayApi::setConfig(
+//                '[[ application_id ]]',
+//                '[[ private_key ]]'
+//            );
             $bootpay = BootpayApi::setConfig(
                 '60001de55b294800272a1a79',
                 'vm6Lg0TQZSzo6mEzx7Lkwg1LFSM7p/05NUYvJyLdMuw='
             );
-
             $response = $bootpay->requestAccessToken();
 
             if ($response->status === 200) {
-                $orderInfo=getOrderIdx($orderIdx); //orderState,userIdx,orderPrice
+                $orderInfo=getOrderIdx($orderIdx);
                 if(empty($orderInfo)){
                     $res->isSuccess = FALSE;
                     $res->code = 4000;
@@ -327,6 +332,9 @@ try {
                 echo json_encode($res, JSON_NUMERIC_CHECK);
                 break;
             }
+
+
+
 
 //
 //        case "makeOrder":
